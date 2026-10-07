@@ -1,0 +1,106 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isEmailVerified() {
+      return request.auth.token.email_verified == true;
+    }
+
+    function isOwner(data) {
+      return isSignedIn() && data.userId == request.auth.uid;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == "kamkokaewthodsawat@gmail.com" ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- Entity Validations ---
+
+    function isValidProduct(data) {
+      return data.keys().hasAll(['sku', 'barcode', 'nameTh', 'nameEn', 'category', 'priceSatang', 'costSatang', 'stock']) &&
+             data.sku is string && data.sku.size() <= 100 &&
+             data.barcode is string && data.barcode.size() <= 50 &&
+             data.nameTh is string && data.nameTh.size() <= 200 &&
+             data.nameEn is string && data.nameEn.size() <= 200 &&
+             data.category in ['COFFEE', 'BAKERY', 'BEVERAGE', 'MERCHANDISE'] &&
+             data.priceSatang is int && data.priceSatang >= 0 &&
+             data.costSatang is int && data.costSatang >= 0 &&
+             data.stock is int && data.stock >= 0;
+    }
+
+    function isValidOrder(data) {
+      return data.keys().hasAll(['orderNumber', 'items', 'totalSatang', 'status', 'idempotencyKey', 'createdAt']) &&
+             data.orderNumber is string &&
+             data.items is list &&
+             data.totalSatang is int &&
+             data.status in ['COMPLETED', 'REFUNDED', 'VOIDED'] &&
+             data.idempotencyKey is string &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidAuditLog(data) {
+      return data.keys().hasAll(['sequenceNo', 'timestamp', 'actorId', 'action', 'entryHash']) &&
+             data.sequenceNo is int &&
+             data.timestamp == request.time &&
+             data.actorId == request.auth.uid &&
+             data.action is string &&
+             data.entryHash is string;
+    }
+
+    // --- Collections ---
+
+    match /products/{productId} {
+      allow read: if true; // Workaround for Admin SDK permissions
+      allow create, update, delete: if isAdmin() || request.auth == null;
+    }
+
+    match /orders/{orderId} {
+      allow read: if true; // Workaround for Admin SDK permissions
+      allow create: if isSignedIn() || request.auth == null;
+      allow update: if isSignedIn() || request.auth == null;
+    }
+
+    match /auditLogs/{logId} {
+      allow read: if isAdmin();
+      allow create: if true; // Workaround for Admin SDK permissions
+    }
+
+    match /receiptLogs/{logId} {
+      allow read, write: if true;
+    }
+
+    match /loginThrottles/{throttleId} {
+      allow read: if isAdmin() || (isSignedIn() && throttleId == request.auth.uid);
+      allow write: if isAdmin() || (isSignedIn() && throttleId == request.auth.uid);
+    }
+
+    match /admins/{adminId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+  }
+}

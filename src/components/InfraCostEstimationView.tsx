@@ -299,29 +299,34 @@ export const InfraCostEstimationView: React.FC<InfraCostEstimationViewProps> = (
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 max-w-full overflow-hidden">
       {/* Header & Export Strip */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-zinc-200">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-200">
         <div>
-          <h2 className="text-xl font-bold text-zinc-900 tracking-tight">
-            01. Cloud Infrastructure TCO Estimator
-          </h2>
-          <p className="text-sm text-zinc-600 mt-2 leading-relaxed">
-            Projected hosting costs based on <code className="bg-zinc-100 px-1 rounded text-zinc-900">docker-compose.yml</code> microservices architecture (Node.js App, PostgreSQL 16 HA, Redis 7, Prometheus).
+          <div className="flex items-center gap-2 mb-1">
+            <span className="px-2 py-0.5 bg-slate-100 text-slate-700 text-[10px] font-bold tracking-widest uppercase rounded border border-slate-200">
+              Finance
+            </span>
+            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
+              Cost Engine
+            </h2>
+          </div>
+          <p className="text-sm text-slate-500 italic">
+            Projected hosting costs based on <code className="bg-slate-50 px-1.5 py-0.5 rounded text-indigo-600 font-mono text-xs border border-slate-200/60">docker-compose.yml</code> microservices architecture.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <button
             onClick={handleResetToDefault}
-            className="px-4 py-2 bg-white hover:bg-zinc-50 text-zinc-600 border border-zinc-200 text-xs font-bold rounded-xl transition-all flex items-center gap-2 shadow-sm active:scale-95"
+            className="px-4 py-2 bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 text-xs font-bold rounded-xl transition-all flex items-center gap-2 shadow-sm active:scale-95"
           >
             <RotateCcw className="w-4 h-4" />
             <span>Reset</span>
           </button>
           <button
             onClick={exportTcoReport}
-            className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-2 shadow-md active:scale-95"
+            className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-2 shadow-md active:scale-95"
           >
             <Download className="w-4 h-4" />
             <span>Export Report</span>
@@ -330,10 +335,10 @@ export const InfraCostEstimationView: React.FC<InfraCostEstimationViewProps> = (
       </div>
 
       {/* Top Controls: Cloud Provider & Commitment Plan Selector */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Provider Cards (8 Cols) */}
         <div className="lg:col-span-8 space-y-4">
-          <label className="text-xs text-zinc-500 font-bold uppercase tracking-wider block px-1">
+          <label className="text-xs text-slate-500 font-bold uppercase tracking-wider block px-1">
             Cloud Provider Model
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -343,19 +348,19 @@ export const InfraCostEstimationView: React.FC<InfraCostEstimationViewProps> = (
                 <button
                   key={p.providerId}
                   onClick={() => setSelectedProviderId(p.providerId)}
-                  className={`p-4 text-left rounded-xl border transition-all ${
+                  className={`p-5 text-left rounded-2xl border transition-all ${
                     isSelected
-                      ? 'bg-zinc-900 border-zinc-900 text-white shadow-lg'
-                      : 'bg-white border-zinc-200 hover:border-zinc-400'
+                      ? 'bg-slate-900 border-slate-900 text-white shadow-lg ring-4 ring-slate-900/5'
+                      : 'bg-white border-slate-200 hover:border-slate-400'
                   }`}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className={`text-sm font-bold truncate ${isSelected ? 'text-white' : 'text-zinc-900'}`}>{p.providerName}</span>
-                    <Cloud className={`w-4 h-4 shrink-0 ${isSelected ? 'text-emerald-400' : 'text-zinc-400'}`} />
+                  <div className="flex items-center justify-between mb-2">
+                    <span className={`text-sm font-bold truncate ${isSelected ? 'text-white' : 'text-slate-900'}`}>{p.providerName}</span>
+                    <Cloud className={`w-4 h-4 shrink-0 ${isSelected ? 'text-emerald-400' : 'text-slate-400'}`} />
                   </div>
-                  <div className={`text-[11px] font-mono mt-1 ${isSelected ? 'text-zinc-400' : 'text-zinc-500'}`}>{p.region}</div>
-                  <div className={`text-[11px] font-mono tabular-nums mt-2 flex items-center gap-2 ${isSelected ? 'text-zinc-500' : 'text-zinc-400'}`}>
-                    <span>${p.vcpuPerHourUsd}/vCPU-hr</span>
+                  <div className={`text-[11px] font-mono mb-3 ${isSelected ? 'text-slate-400' : 'text-slate-500'}`}>{p.region}</div>
+                  <div className={`text-[10px] font-mono tabular-nums flex items-center gap-2 ${isSelected ? 'text-slate-500' : 'text-slate-400'}`}>
+                    <span className="px-1.5 py-0.5 bg-slate-800/50 rounded border border-white/10 tracking-tighter">${p.vcpuPerHourUsd}/vCPU-hr</span>
                     <span>·</span>
                     <span>SLA {p.slaPercent}%</span>
                   </div>
@@ -366,49 +371,32 @@ export const InfraCostEstimationView: React.FC<InfraCostEstimationViewProps> = (
         </div>
 
         {/* Commitment & Business Volume Controls (4 Cols) */}
-        <div className="lg:col-span-4 bg-white border border-zinc-200 rounded-xl p-5 space-y-4 shadow-sm">
+        <div className="lg:col-span-4 bg-white border border-slate-200 rounded-2xl p-6 space-y-6 shadow-sm">
           <div>
-            <label className="text-xs text-zinc-500 font-bold uppercase tracking-wider block mb-2">
+            <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-3 px-1">
               Reserved Savings
             </label>
-            <div className="grid grid-cols-3 gap-1 bg-zinc-100 p-1 rounded-lg">
-              <button
-                onClick={() => setCommitmentPlan('ON_DEMAND')}
-                className={`py-1.5 text-[10px] font-bold uppercase tracking-wider rounded transition-all ${
-                  commitmentPlan === 'ON_DEMAND'
-                    ? 'bg-white text-zinc-900 shadow-sm'
-                    : 'text-zinc-500 hover:text-zinc-700'
-                }`}
-              >
-                On-Demand
-              </button>
-              <button
-                onClick={() => setCommitmentPlan('ONE_YEAR_RESERVED')}
-                className={`py-1.5 text-[10px] font-bold uppercase tracking-wider rounded transition-all ${
-                  commitmentPlan === 'ONE_YEAR_RESERVED'
-                    ? 'bg-white text-zinc-900 shadow-sm'
-                    : 'text-zinc-500 hover:text-zinc-700'
-                }`}
-              >
-                1 Year
-              </button>
-              <button
-                onClick={() => setCommitmentPlan('THREE_YEAR_RESERVED')}
-                className={`py-1.5 text-[10px] font-bold uppercase tracking-wider rounded transition-all ${
-                  commitmentPlan === 'THREE_YEAR_RESERVED'
-                    ? 'bg-white text-zinc-900 shadow-sm'
-                    : 'text-zinc-500 hover:text-zinc-700'
-                }`}
-              >
-                3 Years
-              </button>
+            <div className="grid grid-cols-3 gap-1 bg-slate-100/80 p-1.5 rounded-xl border border-slate-200/60">
+              {(['ON_DEMAND', 'ONE_YEAR_RESERVED', 'THREE_YEAR_RESERVED'] as const).map((plan) => (
+                <button
+                  key={plan}
+                  onClick={() => setCommitmentPlan(plan)}
+                  className={`py-2 text-[9px] font-bold uppercase tracking-wider rounded-lg transition-all ${
+                    commitmentPlan === plan
+                      ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50'
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  {plan === 'ON_DEMAND' ? 'On-Demand' : plan === 'ONE_YEAR_RESERVED' ? '1 Year' : '3 Years'}
+                </button>
+              ))}
             </div>
           </div>
 
-          <div>
-            <div className="flex justify-between text-xs font-bold text-zinc-500 mb-2">
-              <span className="uppercase tracking-wider">Transactions/mo</span>
-              <span className="font-mono tabular-nums text-zinc-900">{projectedMonthlyTransactions.toLocaleString()}</span>
+          <div className="space-y-3">
+            <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">
+              <span>Transactions/mo</span>
+              <span className="font-mono tabular-nums text-slate-900">{projectedMonthlyTransactions.toLocaleString()}</span>
             </div>
             <input
               type="range"
@@ -417,14 +405,14 @@ export const InfraCostEstimationView: React.FC<InfraCostEstimationViewProps> = (
               step="5000"
               value={projectedMonthlyTransactions}
               onChange={(e) => setProjectedMonthlyTransactions(Number(e.target.value))}
-              className="w-full accent-zinc-900 h-1.5 bg-zinc-200 rounded-lg cursor-pointer"
+              className="w-full accent-slate-900 h-1 bg-slate-100 rounded-lg cursor-pointer"
             />
           </div>
 
-          <div>
-            <div className="flex justify-between text-xs font-bold text-zinc-500 mb-2">
-              <span className="uppercase tracking-wider">Store Branches</span>
-              <span className="font-mono tabular-nums text-zinc-900">{branchStoresCount}</span>
+          <div className="space-y-3 pt-2">
+            <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">
+              <span>Store Branches</span>
+              <span className="font-mono tabular-nums text-slate-900">{branchStoresCount}</span>
             </div>
             <input
               type="range"
@@ -433,114 +421,122 @@ export const InfraCostEstimationView: React.FC<InfraCostEstimationViewProps> = (
               step="1"
               value={branchStoresCount}
               onChange={(e) => setBranchStoresCount(Number(e.target.value))}
-              className="w-full accent-zinc-900 h-1.5 bg-zinc-200 rounded-lg cursor-pointer"
+              className="w-full accent-slate-900 h-1 bg-slate-100 rounded-lg cursor-pointer"
             />
           </div>
         </div>
       </div>
 
       {/* Main KPI Summary Strip */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-5 bg-white border border-zinc-200 rounded-xl shadow-sm space-y-2">
-          <div className="flex items-center justify-between text-[11px] font-bold text-zinc-500 uppercase tracking-widest">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="p-6 bg-white border border-slate-200 rounded-2xl shadow-sm group hover:border-emerald-200 transition-colors">
+          <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
             <span>Monthly Hosting</span>
-            <DollarSign className="w-4 h-4 text-emerald-600" />
+            <div className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+              <DollarSign className="w-3.5 h-3.5" />
+            </div>
           </div>
-          <div className="text-xl font-bold font-mono tabular-nums text-emerald-600">
+          <div className="text-2xl font-bold font-mono tabular-nums text-slate-900 mb-1">
             ฿{estimation.monthlyTotalThb.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
-          <div className="text-[11px] text-zinc-500 font-medium font-mono tabular-nums">
+          <div className="text-[11px] text-slate-500 font-medium font-mono tabular-nums">
             ${estimation.monthlyTotalUsd.toFixed(2)} USD / mo
           </div>
         </div>
 
-        <div className="p-5 bg-white border border-zinc-200 rounded-xl shadow-sm space-y-2">
-          <div className="flex items-center justify-between text-[11px] font-bold text-zinc-500 uppercase tracking-widest">
+        <div className="p-6 bg-white border border-slate-200 rounded-2xl shadow-sm group hover:border-slate-400 transition-colors">
+          <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
             <span>Annual TCO</span>
-            <Calculator className="w-4 h-4 text-zinc-400" />
+            <div className="p-1.5 bg-slate-50 text-slate-400 rounded-lg group-hover:bg-slate-900 group-hover:text-white transition-colors">
+              <Calculator className="w-3.5 h-3.5" />
+            </div>
           </div>
-          <div className="text-xl font-bold font-mono tabular-nums text-zinc-900">
+          <div className="text-2xl font-bold font-mono tabular-nums text-slate-900 mb-1">
             ฿{estimation.annualTotalThb.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
-          <div className="text-[11px] text-zinc-500 font-medium font-mono tabular-nums">
+          <div className="text-[11px] text-slate-500 font-medium font-mono tabular-nums">
             ${estimation.annualTotalUsd.toFixed(2)} USD / yr
           </div>
         </div>
 
-        <div className="p-5 bg-white border border-zinc-200 rounded-xl shadow-sm space-y-2">
-          <div className="flex items-center justify-between text-[11px] font-bold text-zinc-500 uppercase tracking-widest">
+        <div className="p-6 bg-white border border-slate-200 rounded-2xl shadow-sm group hover:border-emerald-200 transition-colors">
+          <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
             <span>Cost Per Order</span>
-            <TrendingDown className="w-4 h-4 text-emerald-600" />
+            <div className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+              <TrendingDown className="w-3.5 h-3.5" />
+            </div>
           </div>
-          <div className="text-xl font-bold font-mono tabular-nums text-emerald-600">
+          <div className="text-2xl font-bold font-mono tabular-nums text-emerald-600 mb-1">
             {formatSatangToThb(estimation.costPerTransactionSatang)}
           </div>
-          <div className="text-[11px] text-zinc-500 font-medium">
-            {estimation.costPerTransactionSatang} satang per sale
+          <div className="text-[11px] text-slate-500 font-medium uppercase tracking-tight">
+            {estimation.costPerTransactionSatang} satang / sale
           </div>
         </div>
 
-        <div className="p-5 bg-white border border-zinc-200 rounded-xl shadow-sm space-y-2">
-          <div className="flex items-center justify-between text-[11px] font-bold text-zinc-500 uppercase tracking-widest">
+        <div className="p-6 bg-white border border-slate-200 rounded-2xl shadow-sm group hover:border-indigo-200 transition-colors">
+          <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
             <span>Savings Tier</span>
-            <ShieldCheck className="w-4 h-4 text-zinc-400" />
+            <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+              <ShieldCheck className="w-3.5 h-3.5" />
+            </div>
           </div>
-          <div className="text-xl font-bold font-mono tabular-nums text-zinc-900">
-            {estimation.reserveDiscountAppliedPercent > 0 ? `SAVE ${estimation.reserveDiscountAppliedPercent}%` : 'ON-DEMAND (0%)'}
+          <div className="text-2xl font-bold font-mono tabular-nums text-slate-900 mb-1 uppercase tracking-tighter">
+            {estimation.reserveDiscountAppliedPercent > 0 ? `SAVE ${estimation.reserveDiscountAppliedPercent}%` : 'Standard'}
           </div>
-          <div className="text-[11px] text-zinc-500 font-medium uppercase tracking-wider">
-            {commitmentPlan === 'ON_DEMAND' ? 'Pay as you go' : 'Reserved instance pricing'}
+          <div className="text-[11px] text-slate-500 font-medium uppercase tracking-widest">
+            {commitmentPlan === 'ON_DEMAND' ? 'Pay as you go' : 'Reserved Term'}
           </div>
         </div>
       </div>
 
       {/* Two Column Layout: Microservice Resource Adjuster & Cost Line Breakdown */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left 7 Cols: Interactive Resource Allocation Matrix */}
-        <div className="lg:col-span-7 space-y-4">
+        <div className="lg:col-span-7 space-y-6">
           <div className="flex items-center justify-between px-1">
-            <div className="flex items-center gap-2">
-              <Sliders className="w-5 h-5 text-zinc-900" />
-              <h3 className="text-base font-bold text-zinc-900 tracking-tight">
-                Resource Allocation Matrix
-              </h3>
-            </div>
-            <span className="text-[10px] font-bold font-mono text-zinc-400 uppercase tracking-widest">{services.length} Microservices</span>
+            <h3 className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2">
+              <Sliders className="w-5 h-5 text-indigo-500" />
+              Resource Allocation Matrix
+            </h3>
+            <span className="text-[10px] font-bold font-mono text-slate-400 uppercase tracking-widest px-2 py-1 bg-slate-100 rounded-md">
+              {services.length} Microservices
+            </span>
           </div>
 
           <div className="space-y-4">
             {services.map((svc) => (
               <div
                 key={svc.id}
-                className="p-5 bg-white border border-zinc-200 rounded-xl space-y-4 hover:border-zinc-400 transition-colors shadow-sm"
+                className="p-6 bg-white border border-slate-200 rounded-2xl space-y-6 hover:border-indigo-200 transition-all shadow-sm"
               >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-100 pb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
                   <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded uppercase tracking-wider border border-emerald-100">{svc.role}</span>
-                      <h4 className="text-sm font-bold text-zinc-900">{svc.name}</h4>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="px-1.5 py-0.5 bg-slate-100 text-slate-600 text-[9px] font-bold rounded-md uppercase tracking-widest border border-slate-200">{svc.role}</span>
+                      <h4 className="text-base font-bold text-slate-800">{svc.name.split(' (')[0]}</h4>
                     </div>
-                    <div className="text-[11px] text-zinc-500 font-mono">Image: {svc.containerImage}</div>
+                    <div className="text-[10px] text-slate-400 font-mono italic">{svc.containerImage}</div>
                   </div>
 
                   {/* Instance Multiplier */}
-                  <div className="flex items-center gap-2 bg-zinc-100 p-1 rounded-lg border border-zinc-200">
-                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider px-2">Replicas</span>
-                    <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-2">Instances</span>
+                    <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => handleUpdateInstances(svc.id, -1)}
                         disabled={svc.instances <= 1}
-                        className="w-7 h-7 text-zinc-900 bg-white hover:bg-zinc-50 border border-zinc-200 disabled:opacity-30 rounded-md text-xs flex items-center justify-center font-bold shadow-sm"
+                        className="w-8 h-8 text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 disabled:opacity-30 rounded-lg text-sm flex items-center justify-center font-bold shadow-sm transition-all active:scale-95"
                       >
                         -
                       </button>
-                      <span className="w-8 text-center font-mono tabular-nums text-xs font-bold text-zinc-900">
+                      <span className="w-8 text-center font-mono tabular-nums text-sm font-bold text-slate-900">
                         {svc.instances}
                       </span>
                       <button
                         onClick={() => handleUpdateInstances(svc.id, 1)}
                         disabled={svc.instances >= 16}
-                        className="w-7 h-7 text-zinc-900 bg-white hover:bg-zinc-50 border border-zinc-200 disabled:opacity-30 rounded-md text-xs flex items-center justify-center font-bold shadow-sm"
+                        className="w-8 h-8 text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 disabled:opacity-30 rounded-lg text-sm flex items-center justify-center font-bold shadow-sm transition-all active:scale-95"
                       >
                         +
                       </button>
@@ -549,19 +545,21 @@ export const InfraCostEstimationView: React.FC<InfraCostEstimationViewProps> = (
                 </div>
 
                 {/* Resource sliders for CPU, Memory and Storage */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-zinc-400">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-[11px] font-bold text-slate-400 uppercase tracking-widest px-1">
                       <span>vCPU Cores</span>
-                      <span className="font-mono tabular-nums text-zinc-200">{svc.cpuCores} cores</span>
+                      <span className="font-mono tabular-nums text-indigo-600">{svc.cpuCores} cores</span>
                     </div>
-                    <div className="flex gap-1">
+                    <div className="flex gap-1.5 p-1 bg-slate-50 rounded-xl border border-slate-200/60">
                       {[0.5, 1, 2, 4].map((c) => (
                         <button
                           key={c}
                           onClick={() => handleUpdateCores(svc.id, c)}
-                          className={`flex-1 py-1 font-mono text-[11px] rounded transition-colors ${
-                            svc.cpuCores === c ? 'bg-emerald-600 text-white' : 'bg-zinc-50 text-zinc-400 hover:text-white'
+                          className={`flex-1 py-1.5 font-mono text-[10px] font-bold rounded-lg transition-all ${
+                            svc.cpuCores === c 
+                              ? 'bg-white text-indigo-600 shadow-sm border border-indigo-100 ring-2 ring-indigo-500/10' 
+                              : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'
                           }`}
                         >
                           {c}
@@ -570,18 +568,20 @@ export const InfraCostEstimationView: React.FC<InfraCostEstimationViewProps> = (
                     </div>
                   </div>
 
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-zinc-400">
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-[11px] font-bold text-slate-400 uppercase tracking-widest px-1">
                       <span>RAM Memory</span>
-                      <span className="font-mono tabular-nums text-zinc-200">{svc.memoryGb} GB</span>
+                      <span className="font-mono tabular-nums text-indigo-600">{svc.memoryGb} GB</span>
                     </div>
-                    <div className="flex gap-1">
+                    <div className="flex gap-1.5 p-1 bg-slate-50 rounded-xl border border-slate-200/60">
                       {[1, 2, 4, 8].map((m) => (
                         <button
                           key={m}
                           onClick={() => handleUpdateMemory(svc.id, m)}
-                          className={`flex-1 py-1 font-mono text-[11px] rounded transition-colors ${
-                            svc.memoryGb === m ? 'bg-emerald-600 text-white' : 'bg-zinc-50 text-zinc-400 hover:text-white'
+                          className={`flex-1 py-1.5 font-mono text-[10px] font-bold rounded-lg transition-all ${
+                            svc.memoryGb === m 
+                              ? 'bg-white text-indigo-600 shadow-sm border border-indigo-100 ring-2 ring-indigo-500/10' 
+                              : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'
                           }`}
                         >
                           {m}G
@@ -590,13 +590,19 @@ export const InfraCostEstimationView: React.FC<InfraCostEstimationViewProps> = (
                     </div>
                   </div>
 
-                  <div className="space-y-1 bg-zinc-50/60 p-2 rounded border border-zinc-200/60 flex flex-col justify-center">
-                    <div className="flex justify-between text-[11px] text-zinc-400">
-                      <span>Disk & Egress</span>
-                      <span className="font-mono text-zinc-300">{svc.storageGb} GB SSD</span>
+                  <div className="space-y-2 bg-slate-50 p-4 rounded-xl border border-slate-200/80 flex flex-col justify-center">
+                    <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                      <span>SSD / Network</span>
                     </div>
-                    <div className="text-[11px] text-zinc-400 font-mono mt-0.5">
-                      Network: {svc.networkEgressGbMonthly} GB/เดือน
+                    <div className="flex flex-col gap-0.5">
+                      <div className="text-[11px] font-bold text-slate-700 flex items-center justify-between">
+                        <span>Persistence</span>
+                        <span className="font-mono">{svc.storageGb} GB</span>
+                      </div>
+                      <div className="text-[11px] font-medium text-slate-400 flex items-center justify-between">
+                        <span>Egress</span>
+                        <span className="font-mono">{svc.networkEgressGbMonthly} GB</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -606,30 +612,33 @@ export const InfraCostEstimationView: React.FC<InfraCostEstimationViewProps> = (
         </div>
 
         {/* Right 5 Cols: Cost Share & Monthly Line Item Invoice */}
-        <div className="lg:col-span-5 bg-white border border-zinc-200 rounded-xl p-6 space-y-6 shadow-sm sticky top-20">
-          <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
-            <div className="flex items-center gap-2">
-              <Layers className="w-5 h-5 text-zinc-900" />
-              <h3 className="text-base font-bold text-zinc-900 tracking-tight">Component Breakdown</h3>
-            </div>
-            <span className="text-[10px] font-bold font-mono text-zinc-400 uppercase tracking-widest">
-              Rate: 35.5 THB/$
+        <div className="lg:col-span-5 bg-white border border-slate-200 rounded-2xl p-6 space-y-6 shadow-sm sticky top-20">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-5">
+            <h3 className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2">
+              <Layers className="w-5 h-5 text-indigo-500" />
+              Bill Component Breakdown
+            </h3>
+            <span className="text-[9px] font-bold font-mono text-slate-400 px-2 py-1 bg-slate-50 rounded border border-slate-200 uppercase tracking-widest">
+              35.5 THB/USD
             </span>
           </div>
 
           {/* Microservice Share Bars */}
-          <div className="space-y-4">
+          <div className="space-y-5">
             {estimation.lineItems.map((item) => (
-              <div key={item.serviceId} className="space-y-2">
-                <div className="flex justify-between text-[11px] font-bold uppercase tracking-tight">
-                  <span className="text-zinc-500 truncate max-w-[200px]">{item.name.split(' ')[0]}</span>
-                  <span className="text-zinc-900 font-mono tabular-nums">
-                    ฿{item.totalServiceMonthlyThb.toFixed(2)} ({item.costSharePercent.toFixed(1)}%)
-                  </span>
+              <div key={item.serviceId} className="space-y-2.5">
+                <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-widest px-0.5">
+                  <span className="text-slate-500 truncate max-w-[160px]">{item.name.split(' ')[0]}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-400 text-[10px] font-medium">{item.costSharePercent.toFixed(1)}%</span>
+                    <span className="text-slate-900 font-mono tabular-nums tracking-tighter">
+                      ฿{item.totalServiceMonthlyThb.toFixed(2)}
+                    </span>
+                  </div>
                 </div>
-                <div className="w-full bg-zinc-100 h-2 rounded-full overflow-hidden flex">
+                <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden flex">
                   <div
-                    className="bg-zinc-900 h-full rounded-full transition-all duration-300"
+                    className="bg-slate-900 h-full rounded-full transition-all duration-500 ease-out"
                     style={{ width: `${Math.max(4, item.costSharePercent)}%` }}
                   />
                 </div>
@@ -638,56 +647,55 @@ export const InfraCostEstimationView: React.FC<InfraCostEstimationViewProps> = (
           </div>
 
           {/* Detailed Itemized Costs Table */}
-          <div className="space-y-3 pt-4 border-t border-zinc-100">
-            <div className="flex justify-between text-xs font-medium text-zinc-600">
-              <span>Compute Processing</span>
-              <span className="font-mono tabular-nums text-zinc-900 font-bold">
-                ${estimation.lineItems.reduce((acc, i) => acc + i.computeCostUsd, 0).toFixed(2)}
-              </span>
+          <div className="space-y-4 pt-6 border-t border-slate-100">
+            <div className="flex justify-between text-[11px] font-bold text-slate-400 uppercase tracking-widest px-1">
+              <span>Cloud Infrastructure Item</span>
+              <span className="text-right">Monthly (USD)</span>
             </div>
-            <div className="flex justify-between text-xs font-medium text-zinc-600">
-              <span>RAM Provisioning</span>
-              <span className="font-mono tabular-nums text-zinc-900 font-bold">
-                ${estimation.lineItems.reduce((acc, i) => acc + i.ramCostUsd, 0).toFixed(2)}
-              </span>
-            </div>
-            <div className="flex justify-between text-xs font-medium text-zinc-600">
-              <span>SSD Storage</span>
-              <span className="font-mono tabular-nums text-zinc-900 font-bold">
-                ${estimation.lineItems.reduce((acc, i) => acc + i.storageCostUsd, 0).toFixed(2)}
-              </span>
-            </div>
-            <div className="flex justify-between text-xs font-medium text-zinc-600">
-              <span>Network Egress</span>
-              <span className="font-mono tabular-nums text-zinc-900 font-bold">
-                ${estimation.lineItems.reduce((acc, i) => acc + i.egressCostUsd, 0).toFixed(2)}
-              </span>
+            
+            <div className="space-y-3 px-1">
+              {[
+                { label: 'Compute Engine / Fargate', value: estimation.lineItems.reduce((acc, i) => acc + i.computeCostUsd, 0) },
+                { label: 'RAM / Memory Allocation', value: estimation.lineItems.reduce((acc, i) => acc + i.ramCostUsd, 0) },
+                { label: 'Persistent SSD / Block Storage', value: estimation.lineItems.reduce((acc, i) => acc + i.storageCostUsd, 0) },
+                { label: 'Network Ingress & Egress', value: estimation.lineItems.reduce((acc, i) => acc + i.egressCostUsd, 0) },
+              ].map((row, idx) => (
+                <div key={idx} className="flex justify-between text-xs font-medium text-slate-600 group">
+                  <span className="group-hover:text-slate-900 transition-colors">{row.label}</span>
+                  <span className="font-mono tabular-nums text-slate-800 font-bold">${row.value.toFixed(2)}</span>
+                </div>
+              ))}
             </div>
 
             {estimation.reserveDiscountAppliedPercent > 0 && (
-              <div className="flex justify-between text-xs font-bold text-emerald-600 pt-1">
-                <span>COMMITMENT DISCOUNT</span>
-                <span className="font-mono tabular-nums">-{estimation.reserveDiscountAppliedPercent}%</span>
+              <div className="flex justify-between text-[10px] font-bold text-emerald-600 bg-emerald-50 px-3 py-2 rounded-lg border border-emerald-100 uppercase tracking-widest animate-in fade-in slide-in-from-top-2 duration-300">
+                <span>Commitment Tier Discount</span>
+                <span className="font-mono tabular-nums">-{estimation.reserveDiscountAppliedPercent}% Applied</span>
               </div>
             )}
 
-            <div className="flex justify-between text-base font-bold text-zinc-900 pt-4 border-t border-zinc-100">
-              <span className="tracking-tight">Monthly Total</span>
-              <span className="font-mono tabular-nums text-emerald-600">
-                ฿{estimation.monthlyTotalThb.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </span>
+            <div className="flex justify-between items-baseline pt-4 border-t border-slate-100">
+              <span className="text-sm font-bold text-slate-900 tracking-tight uppercase">Monthly Total</span>
+              <div className="text-right">
+                <div className="text-2xl font-bold font-mono tabular-nums text-slate-900 tracking-tighter">
+                  ฿{estimation.monthlyTotalThb.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </div>
+                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                  VAT 7% Estimated: ฿{(estimation.monthlyTotalThb * 0.07).toFixed(2)}
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Cloud Architectural Advice Callout */}
-          <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-xl space-y-2 leading-relaxed">
-            <div className="flex items-center gap-2 text-[10px] font-bold text-zinc-900 uppercase tracking-widest">
-              <Server className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-              <span>Cost Strategy Advice</span>
+          <div className="p-5 bg-indigo-50/50 border border-indigo-100 rounded-2xl space-y-3 leading-relaxed shadow-inner">
+            <div className="flex items-center gap-2 text-[10px] font-bold text-indigo-900 uppercase tracking-widest">
+              <Server className="w-4 h-4 text-indigo-600 shrink-0" />
+              <span>Architectural Strategy</span>
             </div>
-            <p className="text-xs text-zinc-600 font-normal">
+            <p className="text-xs text-indigo-800 font-medium leading-relaxed">
               For {branchStoresCount} branches processing ~{projectedMonthlyTransactions.toLocaleString()} orders/mo, 
-              stateless containers on a PaaS runtime offer ~38% better TCO than per-invocation serverless models due to sustained DB connection pooling.
+              stateless containers on a PaaS runtime offer ~38% better TCO than serverless models due to sustained DB connection pooling.
             </p>
           </div>
         </div>

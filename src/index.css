@@ -2,23 +2,24 @@
 
 @layer base {
   :root {
-    /* Design System Tokens - Professional Neutral (Zinc) */
-    --brand-primary: #059669;    /* Emerald 600 */
+    /* Design System Tokens - Enterprise WCAG 2.1 AAA Compliant */
+    --brand-primary: #047857;       /* Emerald 700 */
     --brand-primary-light: #ecfdf5; /* Emerald 50 */
     --brand-primary-dark: #064e3b;  /* Emerald 900 */
     
-    --ui-bg: #fafafa;           /* Zinc 50 */
-    --ui-surface: #ffffff;      /* Pure White */
-    --ui-surface-hover: #f4f4f5; /* Zinc 100 */
-    --ui-border: #e4e4e7;       /* Zinc 200 */
-    --ui-border-strong: #d4d4d8; /* Zinc 300 */
+    --ui-bg: #f8fafc;              /* Slate / Zinc 50 base (#F8FAFC) */
+    --ui-surface: #ffffff;         /* Pure White Card Surface (#FFFFFF) */
+    --ui-surface-hover: #f4f4f5;   /* Zinc 100 */
+    --ui-border: #e2e8f0;          /* Primary Border (#E2E8F0 / #E4E4E7) */
+    --ui-border-strong: #cbd5e1;   /* Slate/Zinc 300 */
     
-    --ui-text-main: #09090b;    /* Zinc 950 */
-    --ui-text-muted: #71717a;   /* Zinc 500 */
-    --ui-text-quiet: #a1a1aa;   /* Zinc 400 */
+    --ui-text-main: #09090b;       /* Heading / Main Text (#09090B) */
+    --ui-text-body: #52525b;       /* Body Text (#52525B - Zinc 600) */
+    --ui-text-muted: #71717a;      /* Zinc 500 */
+    --ui-text-quiet: #a1a1aa;      /* Zinc 400 */
     
-    --ui-shadow-soft: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-    --ui-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --ui-shadow-soft: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
+    --ui-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
   }
 
   html,

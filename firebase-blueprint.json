@@ -1,0 +1,96 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "Enterprise catalog product item",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "sku": { "type": "string", "pattern": "^[A-Z0-9-]+$" },
+        "barcode": { "type": "string", "pattern": "^[0-9]+$" },
+        "nameTh": { "type": "string", "maxLength": 200 },
+        "nameEn": { "type": "string", "maxLength": 200 },
+        "category": { "type": "string", "enum": ["COFFEE", "BAKERY", "BEVERAGE", "MERCHANDISE"] },
+        "priceSatang": { "type": "integer" },
+        "costSatang": { "type": "integer" },
+        "stock": { "type": "integer" },
+        "lowStockThreshold": { "type": "integer" },
+        "taxRatePercent": { "type": "integer" }
+      },
+      "required": ["sku", "barcode", "nameTh", "nameEn", "category", "priceSatang", "costSatang", "stock"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "POS transaction record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "orderNumber": { "type": "string" },
+        "storeId": { "type": "string" },
+        "shiftId": { "type": "string" },
+        "cashierName": { "type": "string" },
+        "items": { "type": "array" },
+        "subtotalSatang": { "type": "integer" },
+        "discountSatang": { "type": "integer" },
+        "vatSatang": { "type": "integer" },
+        "totalSatang": { "type": "integer" },
+        "paymentMethod": { "type": "string", "enum": ["PROMPTPAY_QR", "CASH", "CREDIT_CARD", "SPLIT"] },
+        "status": { "type": "string", "enum": ["COMPLETED", "REFUNDED", "VOIDED"] },
+        "idempotencyKey": { "type": "string" },
+        "supervisorPinUsed": { "type": "string" },
+        "reason": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["orderNumber", "items", "totalSatang", "status", "idempotencyKey", "createdAt"]
+    },
+    "AuditLog": {
+      "title": "AuditLog",
+      "description": "Immutable security audit log",
+      "type": "object",
+      "properties": {
+        "sequenceNo": { "type": "integer" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "actorId": { "type": "string" },
+        "actorRole": { "type": "string", "enum": ["STORE_MANAGER", "SHIFT_SUPERVISOR", "CASHIER", "SYSTEM_DAEMON"] },
+        "action": { "type": "string" },
+        "resourceType": { "type": "string", "enum": ["ORDER", "INVENTORY", "MIGRATION", "AUTH_SECURITY", "CI_CD_DEPLOY"] },
+        "resourceId": { "type": "string" },
+        "details": { "type": "string" },
+        "prevHash": { "type": "string" },
+        "entryHash": { "type": "string" },
+        "ipAddress": { "type": "string" }
+      },
+      "required": ["sequenceNo", "timestamp", "actorId", "action", "entryHash"]
+    },
+    "LoginThrottle": {
+      "title": "LoginThrottle",
+      "description": "Auth rate limit tracker",
+      "type": "object",
+      "properties": {
+        "identity": { "type": "string" },
+        "failedAttempts": { "type": "integer" },
+        "lockedUntil": { "type": "string", "format": "date-time" },
+        "lastAttemptAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["identity", "failedAttempts", "lastAttemptAt"]
+    }
+  },
+  "firestore": {
+    "products": {
+      "schema": "Product",
+      "description": "Product catalog"
+    },
+    "orders": {
+      "schema": "Order",
+      "description": "POS transactions"
+    },
+    "auditLogs": {
+      "schema": "AuditLog",
+      "description": "Security audit ledger"
+    },
+    "loginThrottles": {
+      "schema": "LoginThrottle",
+      "description": "Rate limiting data"
+    }
+  }
+}

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import {
   ShoppingBag,
   Database,
@@ -173,289 +174,267 @@ export default function App() {
   const latestTelemetry = telemetryHistory[telemetryHistory.length - 1];
 
   return (
-    <div className="min-h-screen bg-zinc-50 text-zinc-900 flex flex-col max-w-full overflow-x-hidden min-w-0 font-sans">
-      {/* Strict 3-Zone Top Bar Contract: Brand | Navigation | Actions */}
-      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-zinc-200 px-6 py-4 flex items-center justify-between gap-4 max-w-full overflow-hidden">
-        {/* Zone 1: Single text element wordmark */}
-        <a
-          href="#top"
-          onClick={(e) => {
-            e.preventDefault();
-            setActiveModule('POS');
-          }}
-          className="text-xl font-bold tracking-tight text-zinc-900 whitespace-nowrap shrink-0"
-        >
-          PRODX
-        </a>
-
-        {/* Zone 2: 4-6 clean text navigation links */}
-        <nav className="hidden lg:flex items-center gap-8 text-sm font-medium">
-          <button
-            onClick={() => setActiveModule('POS')}
-            className={`py-1 transition-colors whitespace-nowrap border-b-2 ${
-              activeModule === 'POS'
-                ? 'border-emerald-600 text-zinc-900'
-                : 'border-transparent text-zinc-500 hover:text-zinc-900'
-            }`}
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col max-w-full overflow-x-hidden min-w-0 font-sans">
+      {/* Header Bar - Strict Enterprise Elevation & Alignment */}
+      <header className="bg-white border-b border-slate-200/80 sticky top-0 z-30 px-6 py-3 flex items-center justify-between gap-4 max-w-full overflow-hidden">
+        {/* Brand */}
+        <div className="flex items-center gap-4 shrink-0">
+          <a
+            href="#top"
+            onClick={(e) => {
+              e.preventDefault();
+              setActiveModule('POS');
+            }}
+            className="text-xl font-bold tracking-tight text-slate-900 whitespace-nowrap"
           >
-            Terminal
-          </button>
-
-          <button
-            onClick={() => setActiveModule('MIGRATIONS')}
-            className={`py-1 transition-colors whitespace-nowrap border-b-2 ${
-              activeModule === 'MIGRATIONS'
-                ? 'border-emerald-600 text-zinc-900'
-                : 'border-transparent text-zinc-500 hover:text-zinc-900'
-            }`}
-          >
-            Database
-          </button>
-
-          <button
-            onClick={() => setActiveModule('BACKEND_CONNECT')}
-            className={`py-1 transition-colors whitespace-nowrap border-b-2 ${
-              activeModule === 'BACKEND_CONNECT'
-                ? 'border-emerald-600 text-zinc-900'
-                : 'border-transparent text-zinc-500 hover:text-zinc-900'
-            }`}
-          >
-            Network
-          </button>
-
-          <button
-            onClick={() => setActiveModule('DOCKER_CICD')}
-            className={`py-1 transition-colors whitespace-nowrap border-b-2 ${
-              activeModule === 'DOCKER_CICD'
-                ? 'border-emerald-600 text-zinc-900'
-                : 'border-transparent text-zinc-500 hover:text-zinc-900'
-            }`}
-          >
-            Deployment
-          </button>
-
-          <button
-            onClick={() => setActiveModule('TELEMETRY')}
-            className={`py-1 transition-colors whitespace-nowrap border-b-2 ${
-              activeModule === 'TELEMETRY'
-                ? 'border-emerald-600 text-zinc-900'
-                : 'border-transparent text-zinc-500 hover:text-zinc-900'
-            }`}
-          >
-            Monitoring
-          </button>
-
-          <button
-            onClick={() => setActiveModule('SECURITY')}
-            className={`py-1 transition-colors whitespace-nowrap border-b-2 ${
-              activeModule === 'SECURITY'
-                ? 'border-emerald-600 text-zinc-900'
-                : 'border-transparent text-zinc-500 hover:text-zinc-900'
-            }`}
-          >
-            Security
-          </button>
-        </nav>
-
-        {/* Zone 3: 1-2 Primary Actions */}
-        <div className="flex items-center gap-3 shrink-0">
-          <button
-            onClick={fetchAllEnterpriseData}
-            className="hidden sm:flex items-center justify-center p-2 text-zinc-500 hover:text-zinc-900 transition-colors"
-            title="Refresh Data"
-          >
-            <RefreshCw className="w-5 h-5" />
-          </button>
-          
-          <button
-            onClick={exportProductionReadinessManifest}
-            className="px-4 py-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-semibold shadow-sm transition active:scale-95 whitespace-nowrap"
-          >
-            Export Manifest
-          </button>
+            PRODX
+          </a>
         </div>
-      </header>
 
-      {/* Mobile Navigation - Persistent Bottom Bar or Thin Top Strip */}
-      <div className="flex lg:hidden items-center gap-1 px-4 py-2 bg-white border-b border-zinc-200 overflow-x-auto no-scrollbar">
-        {(
-          [
+        {/* Main Navigation Tabs: Unified Hierarchy */}
+        <nav className="hidden lg:flex items-center gap-1 p-1 bg-slate-100/80 rounded-xl border border-slate-200/60">
+          {[
             { id: 'POS', label: 'POS' },
             { id: 'MIGRATIONS', label: 'DB' },
             { id: 'BACKEND_CONNECT', label: 'Network' },
             { id: 'DOCKER_CICD', label: 'Deploy' },
             { id: 'TELEMETRY', label: 'Monitor' },
             { id: 'SECURITY', label: 'Security' },
-          ] as const
-        ).map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveModule(tab.id)}
-            className={`px-4 py-1.5 text-xs font-bold rounded-full whitespace-nowrap transition-colors shadow-sm ${
-              activeModule === tab.id ? 'bg-zinc-900 text-white' : 'text-zinc-500 hover:bg-zinc-100 bg-white border border-zinc-200 shadow-none'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+            { id: 'COST_ESTIMATOR', label: 'Cost TCO' },
+          ].map((tab) => {
+            const isActive = activeModule === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveModule(tab.id as ActiveModule)}
+                className={`whitespace-nowrap transition-all px-3.5 py-1.5 rounded-lg text-xs md:text-sm font-semibold ${
+                  isActive
+                    ? 'bg-white text-slate-900 shadow-sm border border-slate-200/60 font-bold'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </nav>
 
-      {/* Main Content Container */}
+        {/* Action Controls */}
+        <div className="flex items-center gap-4 shrink-0">
+          {/* Device Switcher - Integrated */}
+          <div className="hidden xl:flex items-center p-1 bg-slate-100 rounded-lg border border-slate-200/60">
+            {[
+              { id: 'AUTO', icon: Maximize2, title: 'Auto' },
+              { id: 'MOBILE', icon: Smartphone, title: 'Mobile' },
+              { id: 'TABLET', icon: Tablet, title: 'Tablet' },
+              { id: 'DESKTOP', icon: Monitor, title: 'Desktop' },
+            ].map((d) => (
+              <button
+                key={d.id}
+                onClick={() => setDeviceViewMode(d.id as any)}
+                className={`p-1.5 rounded-md transition-all ${
+                  deviceViewMode === d.id 
+                    ? 'bg-white text-emerald-600 shadow-sm' 
+                    : 'text-slate-400 hover:text-slate-600'
+                }`}
+                title={d.title}
+              >
+                <d.icon className="w-3.5 h-3.5" />
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={fetchAllEnterpriseData}
+            className="hidden sm:flex items-center justify-center p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+            title="Refresh Data"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </button>
+          
+          <button
+            onClick={exportProductionReadinessManifest}
+            className="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold shadow-sm transition-all active:scale-95 whitespace-nowrap"
+          >
+            Export Manifest
+          </button>
+        </div>
+      </header>
+
+      {/* Mobile Navigation Strip */}
+      <div className="flex lg:hidden items-center gap-1.5 px-4 py-2.5 bg-white border-b border-slate-200/80 overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-1 p-1 bg-slate-100/80 rounded-xl border border-slate-200/60">
+          {[
+            { id: 'POS', label: 'POS' },
+            { id: 'MIGRATIONS', label: 'DB' },
+            { id: 'BACKEND_CONNECT', label: 'Network' },
+            { id: 'DOCKER_CICD', label: 'Deploy' },
+            { id: 'TELEMETRY', label: 'Monitor' },
+            { id: 'SECURITY', label: 'Security' },
+            { id: 'COST_ESTIMATOR', label: 'Cost' },
+          ].map((tab) => {
+            const isActive = activeModule === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveModule(tab.id as ActiveModule)}
+                className={`whitespace-nowrap transition-all text-xs px-3.5 py-1.5 rounded-lg font-semibold ${
+                  isActive
+                    ? 'bg-white text-slate-900 shadow-sm border border-slate-200/60 font-bold'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
       <main
         className={`flex-1 w-full mx-auto p-6 space-y-8 transition-all ${
           deviceViewMode === 'MOBILE'
-            ? 'max-w-[430px] border-x border-zinc-200 bg-white shadow-2xl rounded-2xl my-4'
+            ? 'max-w-[430px] border-x border-slate-200 bg-white shadow-2xl rounded-2xl my-4'
             : deviceViewMode === 'TABLET'
-            ? 'max-w-[840px] border-x border-zinc-200 bg-white shadow-xl'
+            ? 'max-w-[840px] border-x border-slate-200 bg-white shadow-xl'
             : 'max-w-[1440px]'
         }`}
       >
-        {/* Device Switcher (Floating Quick Control for Dev) */}
-        <div className="fixed bottom-6 right-6 hidden sm:flex items-center p-1 bg-white/80 backdrop-blur border border-zinc-200 rounded-full shadow-lg z-50">
-          <button
-            onClick={() => setDeviceViewMode('AUTO')}
-            className={`p-2 rounded-full transition-colors ${deviceViewMode === 'AUTO' ? 'bg-zinc-900 text-white' : 'text-zinc-500 hover:bg-zinc-100'}`}
-            title="Auto Layout"
-          >
-            <Maximize2 className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setDeviceViewMode('MOBILE')}
-            className={`p-2 rounded-full transition-colors ${deviceViewMode === 'MOBILE' ? 'bg-zinc-900 text-white' : 'text-zinc-500 hover:bg-zinc-100'}`}
-            title="Mobile"
-          >
-            <Smartphone className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setDeviceViewMode('TABLET')}
-            className={`p-2 rounded-full transition-colors ${deviceViewMode === 'TABLET' ? 'bg-zinc-900 text-white' : 'text-zinc-500 hover:bg-zinc-100'}`}
-            title="Tablet"
-          >
-            <Tablet className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setDeviceViewMode('DESKTOP')}
-            className={`p-2 rounded-full transition-colors ${deviceViewMode === 'DESKTOP' ? 'bg-zinc-900 text-white' : 'text-zinc-500 hover:bg-zinc-100'}`}
-            title="Desktop"
-          >
-            <Monitor className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* Global Summary Strip - Zero-Pill Discipline */}
-        <section className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-8 border-b border-zinc-200">
+        {/* Global Summary Strip - Structured Status Badges & Standardized Financial Metrics */}
+        <section className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-8 border-b border-slate-200/80">
           <div className="space-y-4">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                PRODUCTION READY
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-zinc-100 text-zinc-600 border border-zinc-200 font-mono">
-                STORE: {telemetrySummary.activeStore}
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-zinc-100 text-zinc-600 border border-zinc-200 font-mono">
-                SHIFT: {telemetrySummary.activeShift}
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-zinc-50 text-zinc-400 border border-zinc-100 font-mono">
-                V2.1.0
-              </span>
+            <div className="flex flex-wrap items-center gap-3">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200"
+              >
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
+                <span className="uppercase tracking-tight font-mono">PRODUCTION-READY</span>
+              </motion.div>
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200/80 font-mono">
+                <span className="uppercase tracking-tight tabular-nums">STORE-{telemetrySummary.activeStore}</span>
+              </div>
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200/80 font-mono">
+                <span className="uppercase tracking-tight tabular-nums">SHIFT-{telemetrySummary.activeShift}</span>
+              </div>
             </div>
-            <h1 className="text-3xl font-extrabold text-zinc-900 tracking-tight">
-              Enterprise Operations
-            </h1>
+            <div className="space-y-1">
+              <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tighter">
+                Cloud Terminal Workspace
+              </h1>
+              <p className="text-sm text-slate-600 font-medium max-w-2xl leading-relaxed">
+                Auth-integrated microservices environment with Firestore persistence, SHA-256 ledger security, 
+                and PWA support.
+              </p>
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-10">
+          {/* Standardized Atomic Financial & Numeric Metric Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 lg:gap-12 shrink-0">
             <div className="flex flex-col">
-              <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">NET SALES</span>
-              <div className="flex items-baseline gap-1 mt-1">
-                <span className="text-xl font-bold font-mono text-emerald-600">฿</span>
-                <span className="text-2xl md:text-3xl font-extrabold font-mono text-zinc-900 tracking-tight tabular-nums">
-                  {formatSatangToThb(completedSalesSatang).replace('฿', '').trim()}
-                </span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Net Sales</span>
+              <div className="flex items-baseline gap-1.5 font-mono font-extrabold text-2xl lg:text-3xl text-slate-900 tabular-nums tracking-tighter">
+                <span className="text-slate-400 text-lg font-sans">฿</span>
+                <span>{(completedSalesSatang / 100).toLocaleString('th-TH', { minimumFractionDigits: 2 })}</span>
               </div>
             </div>
             
             <div className="flex flex-col">
-              <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">MIGRATIONS</span>
-              <span className="text-2xl font-bold font-mono text-zinc-900 mt-1 tabular-nums">
-                {migrations.length}/30
-              </span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Status</span>
+              <div className="flex items-baseline gap-1.5 font-mono font-extrabold text-2xl lg:text-3xl text-slate-900 tabular-nums tracking-tighter">
+                <span className="text-emerald-600">LIVE</span>
+                <span className="text-[10px] font-bold text-emerald-600 uppercase">Firestore</span>
+              </div>
             </div>
 
             <div className="flex flex-col">
-              <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">LATENCY</span>
-              <span className="text-2xl font-bold font-mono text-zinc-900 mt-1 tabular-nums">
-                {latestTelemetry ? `${latestTelemetry.p95LatencyMs}ms` : '19ms'}
-              </span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Latency</span>
+              <div className="flex items-baseline gap-1.5 font-mono font-extrabold text-2xl lg:text-3xl text-slate-900 tabular-nums tracking-tighter">
+                <span>{latestTelemetry ? latestTelemetry.p95LatencyMs : '19'}</span>
+                <span className="text-slate-400 text-sm font-sans lowercase">ms</span>
+              </div>
             </div>
 
             <div className="flex flex-col">
-              <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">AUDIT BLOCKS</span>
-              <span className="text-2xl font-bold font-mono text-zinc-900 mt-1 tabular-nums">
-                {auditLogs.length}
-              </span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Audit Blocks</span>
+              <div className="flex items-baseline gap-1.5 font-mono font-extrabold text-2xl lg:text-3xl text-slate-900 tabular-nums tracking-tighter">
+                <span>{auditLogs.length}</span>
+                <span className="text-[10px] font-bold text-emerald-600 uppercase flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3" />
+                  Verified
+                </span>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* Active Workspace View */}
-        {loadingInitial && products.length === 0 ? (
-          <div className="py-16 text-center space-y-2">
-            <div className="text-sm font-mono text-zinc-400">
-              กำลังโหลดสถานะฐานข้อมูลและระบบตรวจสอบความปลอดภัย PRODX...
+        {/* Active Workspace View with AnimatePresence */}
+        <div className="relative">
+          {loadingInitial && products.length === 0 ? (
+            <div className="py-16 text-center space-y-2">
+              <div className="text-sm font-mono text-slate-400">
+                กำลังโหลดสถานะฐานข้อมูลและระบบตรวจสอบความปลอดภัย PRODX...
+              </div>
             </div>
-          </div>
-        ) : (
-          <>
-            {activeModule === 'POS' && (
-              <PosTerminalWorkspace
-                products={products}
-                orders={orders}
-                onOrderCreated={() => fetchAllEnterpriseData()}
-                onOrderOverridden={() => fetchAllEnterpriseData()}
-                onStockAdjusted={() => fetchAllEnterpriseData()}
-              />
-            )}
+          ) : (
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeModule}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+              >
+                {activeModule === 'POS' && (
+                  <PosTerminalWorkspace
+                    products={products}
+                    orders={orders}
+                    onOrderCreated={() => fetchAllEnterpriseData()}
+                    onOrderOverridden={() => fetchAllEnterpriseData()}
+                    onStockAdjusted={() => fetchAllEnterpriseData()}
+                  />
+                )}
 
-            {activeModule === 'MIGRATIONS' && (
-              <DatabaseMigrationConsole
-                migrations={migrations}
-                invariants={invariants}
-                onVerifyMigrations={handleVerifyMigrations}
-              />
-            )}
+                {activeModule === 'MIGRATIONS' && (
+                  <DatabaseMigrationConsole
+                    migrations={migrations}
+                    invariants={invariants}
+                    onVerifyMigrations={handleVerifyMigrations}
+                  />
+                )}
 
-            {activeModule === 'BACKEND_CONNECT' && (
-              <BackendConnectionView onBackendVerified={fetchAllEnterpriseData} />
-            )}
+                {activeModule === 'BACKEND_CONNECT' && (
+                  <BackendConnectionView onBackendVerified={fetchAllEnterpriseData} />
+                )}
 
-            {activeModule === 'DOCKER_CICD' && <DockerCicdBlueprintView />}
+                {activeModule === 'DOCKER_CICD' && <DockerCicdBlueprintView />}
 
-            {activeModule === 'COST_ESTIMATOR' && (
-              <InfraCostEstimationView
-                initialServices={infraServices}
-                initialProviders={infraProviders}
-              />
-            )}
+                {activeModule === 'COST_ESTIMATOR' && (
+                  <InfraCostEstimationView
+                    initialServices={infraServices}
+                    initialProviders={infraProviders}
+                  />
+                )}
 
-            {activeModule === 'TELEMETRY' && (
-              <RealtimeTelemetryConsole
-                history={telemetryHistory}
-                summary={telemetrySummary}
-                onTriggerDrill={handleTriggerDrill}
-              />
-            )}
+                {activeModule === 'TELEMETRY' && (
+                  <RealtimeTelemetryConsole
+                    history={telemetryHistory}
+                    summary={telemetrySummary}
+                    onTriggerDrill={handleTriggerDrill}
+                  />
+                )}
 
-            {activeModule === 'SECURITY' && (
-              <SecurityRbacAuditConsole
-                logs={auditLogs}
-                throttles={throttles}
-                onRefreshSecurityData={fetchAllEnterpriseData}
-              />
-            )}
-          </>
-        )}
+                {activeModule === 'SECURITY' && (
+                  <SecurityRbacAuditConsole
+                    logs={auditLogs}
+                    throttles={throttles}
+                    onRefreshSecurityData={fetchAllEnterpriseData}
+                  />
+                )}
+              </motion.div>
+            </AnimatePresence>
+          )}
+        </div>
       </main>
     </div>
   );

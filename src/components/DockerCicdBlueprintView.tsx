@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Container, GitBranch, CheckCircle2, Copy, Check, Terminal, Server, Layers } from 'lucide-react';
+import { Container, GitBranch, CheckCircle2, Copy, Check, Terminal, Server, Layers, ShieldCheck } from 'lucide-react';
 
 const DOCKERFILE_CONTENT = `# ==============================================================================
 # PRODX ENTERPRISE POS - MULTI-STAGE PRODUCTION DOCKERFILE
@@ -177,63 +177,79 @@ export const DockerCicdBlueprintView: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 max-w-full overflow-hidden">
       {/* Header */}
-      <div className="pb-6 border-b border-zinc-200">
-        <h2 className="text-xl font-bold text-zinc-900 tracking-tight">
-          01. Enterprise Container Topology & CI/CD Architecture
-        </h2>
-        <p className="text-sm text-zinc-600 mt-2 leading-relaxed">
-          Scalable multi-tier architecture optimized for Cloud Run, Kubernetes, and high-performance POS workloads with automated quality gates.
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-200">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-bold tracking-widest uppercase rounded border border-emerald-100">
+              Infrastructure
+            </span>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Deployment Topology</h1>
+          </div>
+          <p className="text-slate-500 text-sm italic">Multi-tier Cloud Run & High-Performance POS Workloads.</p>
+        </div>
       </div>
 
-      {/* Enterprise Container Topology */}
+      <p className="text-slate-600 font-normal text-sm leading-relaxed max-w-3xl">
+        สถาปัตยกรรมระดับองค์กรแบบ Multi-tier สำหรับ Cloud Run, Kubernetes และ High-Performance POS Workloads พร้อมระบบตรวจสอบคุณภาพอัตโนมัติ (Automated Quality Gates)
+      </p>
+
+      {/* Enterprise Container Topology Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="p-5 bg-white border border-zinc-200 rounded-xl shadow-sm space-y-4">
-          <div className="flex items-center justify-between text-[11px] text-emerald-700 font-bold uppercase tracking-wider">
-            <span>TIER 01 · STATELESS APP</span>
-            <span className="px-1.5 py-0.5 bg-emerald-50 rounded">AUTO-SCALE</span>
-          </div>
-          <div className="flex items-center gap-3 text-zinc-900 font-bold text-base">
-            <div className="p-2 bg-emerald-50 rounded-lg">
-              <Container className="w-5 h-5 text-emerald-600" />
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm group hover:border-emerald-200 transition-all">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tier 01</span>
+              <span className="px-1.5 py-0.5 bg-slate-100 text-slate-600 text-[9px] font-bold rounded">Stateless</span>
             </div>
-            <span>PRODX Core Engine</span>
+            <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[9px] font-bold uppercase rounded border border-emerald-100">Auto-Scale</span>
           </div>
-          <p className="text-sm text-zinc-600 leading-relaxed">
-            Node.js 22 runtime with non-root security. Verified health probes at <code className="bg-zinc-100 px-1 rounded text-zinc-900">/api/healthz</code>.
+          <div className="flex items-center gap-3 text-slate-900 font-bold text-lg tracking-tight mb-3">
+            <div className="p-2 bg-slate-50 rounded-xl text-slate-600 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
+              <Container className="w-5 h-5" />
+            </div>
+            <span>PRODX Core</span>
+          </div>
+          <p className="text-slate-600 font-normal text-sm leading-relaxed">
+            Node.js 22 runtime with non-root security. Verified health probes at <code className="bg-slate-50 px-1.5 py-0.5 rounded text-indigo-600 font-mono text-xs border border-slate-200/60">/api/healthz</code>.
           </p>
         </div>
 
-        <div className="p-5 bg-white border border-zinc-200 rounded-xl shadow-sm space-y-4">
-          <div className="flex items-center justify-between text-[11px] text-emerald-700 font-bold uppercase tracking-wider">
-            <span>TIER 02 · DATABASE</span>
-            <span className="px-1.5 py-0.5 bg-emerald-50 rounded">HIGH AVAILABILITY</span>
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm group hover:border-indigo-200 transition-all">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tier 02</span>
+              <span className="px-1.5 py-0.5 bg-slate-100 text-slate-600 text-[9px] font-bold rounded">Stateful</span>
+            </div>
+            <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 text-[9px] font-bold uppercase rounded border border-indigo-100">High Avail</span>
           </div>
-          <div className="flex items-center gap-3 text-zinc-900 font-bold text-base">
-            <div className="p-2 bg-emerald-50 rounded-lg">
-              <Server className="w-5 h-5 text-emerald-600" />
+          <div className="flex items-center gap-3 text-slate-900 font-bold text-lg tracking-tight mb-3">
+            <div className="p-2 bg-slate-50 rounded-xl text-slate-600 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
+              <Server className="w-5 h-5" />
             </div>
             <span>PostgreSQL Ledger</span>
           </div>
-          <p className="text-sm text-zinc-600 leading-relaxed">
+          <p className="text-slate-600 font-normal text-sm leading-relaxed">
             Append-only audit logs with financial balance invariant triggers and PITR recovery support.
           </p>
         </div>
 
-        <div className="p-5 bg-white border border-zinc-200 rounded-xl shadow-sm space-y-4">
-          <div className="flex items-center justify-between text-[11px] text-emerald-700 font-bold uppercase tracking-wider">
-            <span>TIER 03 · CACHE</span>
-            <span className="px-1.5 py-0.5 bg-emerald-50 rounded">AOF PERSISTENCE</span>
-          </div>
-          <div className="flex items-center gap-3 text-zinc-900 font-bold text-base">
-            <div className="p-2 bg-emerald-50 rounded-lg">
-              <Layers className="w-5 h-5 text-emerald-600" />
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm group hover:border-amber-200 transition-all">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tier 03</span>
+              <span className="px-1.5 py-0.5 bg-slate-100 text-slate-600 text-[9px] font-bold rounded">Cache</span>
             </div>
-            <span>Redis Session & Locks</span>
+            <span className="px-2 py-0.5 bg-amber-50 text-amber-700 text-[9px] font-bold uppercase rounded border border-amber-100">AOF Sync</span>
           </div>
-          <p className="text-sm text-zinc-600 leading-relaxed">
+          <div className="flex items-center gap-3 text-slate-900 font-bold text-lg tracking-tight mb-3">
+            <div className="p-2 bg-slate-50 rounded-xl text-slate-600 group-hover:bg-amber-50 group-hover:text-amber-600 transition-colors">
+              <Layers className="w-5 h-5" />
+            </div>
+            <span>Redis Sessions</span>
+          </div>
+          <p className="text-slate-600 font-normal text-sm leading-relaxed">
             Low-latency session store, distributed locks for idempotency, and login rate throttling.
           </p>
         </div>
@@ -241,100 +257,93 @@ export const DockerCicdBlueprintView: React.FC = () => {
 
       {/* CI/CD Pipeline Gates + Configuration Code Viewer */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left 5 Cols: 6 Automated CI/CD Gates */}
-        <div className="lg:col-span-5 space-y-4">
-          <div className="flex items-center gap-2 px-1">
-            <GitBranch className="w-5 h-5 text-emerald-600" />
-            <h3 className="text-base font-bold text-zinc-900 tracking-tight">
-              CI/CD Production Quality Gates
+        {/* Left 5 Cols: Automated CI/CD Gates */}
+        <div className="lg:col-span-5 space-y-6">
+          <div className="flex items-center justify-between px-1">
+            <h3 className="text-slate-900 font-bold text-lg tracking-tight flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-emerald-600" />
+              Operational Audit Blocks
             </h3>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">6 Verified Gates</span>
           </div>
 
-          <div className="divide-y divide-zinc-200 border border-zinc-200 rounded-xl bg-white shadow-sm overflow-hidden">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {gates.map((gate, index) => (
-              <div key={gate.id} className="p-4 flex items-start justify-between gap-4 hover:bg-zinc-50 transition-colors">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 text-xs font-mono text-zinc-900 font-bold">
-                    <span className="text-zinc-400">0{index + 1}.</span>
-                    <span>{gate.name}</span>
+              <div key={gate.id} className="p-4 bg-white border border-slate-200 rounded-2xl shadow-sm hover:border-emerald-200 transition-all group">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="text-[10px] font-bold text-slate-400 font-mono">#{index + 1}</div>
+                  <div className="text-emerald-700 font-bold text-[9px] inline-flex items-center gap-1 px-1.5 py-0.5 bg-emerald-50 rounded-full border border-emerald-100">
+                    <CheckCircle2 className="w-2.5 h-2.5" />
+                    <span>PASSED</span>
                   </div>
-                  <p className="text-xs text-zinc-500 leading-relaxed">{gate.scope}</p>
                 </div>
-                <div className="text-right shrink-0 font-mono tabular-nums">
-                  <div className="text-emerald-600 font-bold text-xs inline-flex items-center gap-1.5 px-2 py-0.5 bg-emerald-50 rounded-full border border-emerald-100">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>{gate.status}</span>
+                <div className="space-y-1">
+                  <div className="text-[11px] font-bold text-slate-900 leading-tight group-hover:text-emerald-700 transition-colors">
+                    {gate.name}
                   </div>
-                  <div className="text-[10px] font-bold text-zinc-400 mt-1 uppercase tracking-wider">{gate.duration}</div>
+                  <p className="text-[10px] text-slate-500 font-normal leading-relaxed line-clamp-2">
+                    {gate.scope}
+                  </p>
+                </div>
+                <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-[9px] font-bold">
+                  <span className="text-slate-400 uppercase tracking-wider">Duration</span>
+                  <span className="text-slate-600 font-mono">{gate.duration}</span>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Right 7 Cols: Ready-to-Deploy Infrastructure Code */}
-        <div className="lg:col-span-7 bg-zinc-950 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden">
-          <div className="flex flex-wrap items-center justify-between px-4 py-3 bg-zinc-900/50 border-b border-zinc-800">
-            <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
-              <button
-                onClick={() => setActiveArtifact('DOCKERFILE')}
-                className={`px-3 py-1.5 text-xs font-bold font-mono rounded-md transition-all ${
-                  activeArtifact === 'DOCKERFILE'
-                    ? 'bg-zinc-700 text-white shadow-sm'
-                    : 'text-zinc-500 hover:text-zinc-300'
-                }`}
-              >
-                Dockerfile
-              </button>
-              <button
-                onClick={() => setActiveArtifact('COMPOSE')}
-                className={`px-3 py-1.5 text-xs font-bold font-mono rounded-md transition-all ${
-                  activeArtifact === 'COMPOSE'
-                    ? 'bg-zinc-700 text-white shadow-sm'
-                    : 'text-zinc-500 hover:text-zinc-300'
-                }`}
-              >
-                docker-compose.yml
-              </button>
-              <button
-                onClick={() => setActiveArtifact('CICD')}
-                className={`px-3 py-1.5 text-xs font-bold font-mono rounded-md transition-all ${
-                  activeArtifact === 'CICD'
-                    ? 'bg-zinc-700 text-white shadow-sm'
-                    : 'text-zinc-500 hover:text-zinc-300'
-                }`}
-              >
-                production-pipeline.yml
-              </button>
+        {/* Right 7 Cols: Ready-to-Deploy Infrastructure Code Viewer */}
+        <div className="lg:col-span-7 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+          <div className="flex flex-wrap items-center justify-between px-5 py-4 border-b border-slate-100 bg-slate-50/50">
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+              {['DOCKERFILE', 'COMPOSE', 'CICD'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveArtifact(tab as any)}
+                  className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all ${
+                    activeArtifact === tab
+                      ? 'bg-slate-900 text-white shadow-sm shadow-slate-200'
+                      : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
+                  }`}
+                >
+                  {tab === 'DOCKERFILE' ? 'Dockerfile' : tab === 'COMPOSE' ? 'Compose.yml' : 'CI-Pipeline'}
+                </button>
+              ))}
             </div>
 
             <button
               onClick={copyCode}
-              className="px-3 py-1.5 text-[11px] font-bold text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-lg flex items-center gap-2 transition-all active:scale-95"
+              className="px-3 py-1.5 text-[10px] font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 rounded-lg flex items-center gap-2 transition-all active:scale-95 shadow-sm"
             >
-              {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{copied ? 'COPIED' : 'COPY CODE'}</span>
+              {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+              <span>{copied ? 'COPIED' : 'COPY'}</span>
             </button>
           </div>
 
-          <div className="relative group">
-            <pre className="p-6 text-[12px] font-mono text-zinc-300 overflow-x-auto leading-relaxed max-h-[440px] custom-scrollbar">
+          <div className="relative group p-6 bg-slate-50/30">
+            <pre className="text-[11px] font-mono text-slate-700 overflow-x-auto leading-relaxed max-h-[440px] custom-scrollbar whitespace-pre">
               {currentCode}
             </pre>
             <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-              <div className="px-2 py-1 bg-emerald-600/10 text-emerald-400 border border-emerald-500/20 rounded text-[10px] font-bold">
-                READ-ONLY
+              <div className="px-2 py-1 bg-white border border-slate-200 text-slate-400 rounded text-[9px] font-bold shadow-sm">
+                READ-ONLY ARTIFACT
               </div>
             </div>
           </div>
 
-          <div className="px-6 py-4 bg-zinc-900 border-t border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[11px] font-mono">
-            <div className="flex items-center gap-2 text-zinc-400">
-              <Terminal className="w-4 h-4 text-emerald-500" />
-              <span className="text-zinc-300 font-bold">RUN COMMAND:</span>
-              <code className="text-emerald-400">docker compose up -d --build</code>
+          <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white rounded-lg border border-slate-200 shadow-sm">
+                <Terminal className="w-4 h-4 text-emerald-600" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Quick Start Command</span>
+                <code className="text-xs font-mono font-bold text-slate-900 tabular-nums">docker compose up -d --build</code>
+              </div>
             </div>
-            <span className="text-zinc-500 uppercase tracking-widest text-[10px]">Production ready deployment artifact</span>
+            <span className="text-slate-400 uppercase tracking-widest text-[9px] font-bold">Prod-Grade Artifact</span>
           </div>
         </div>
       </div>
