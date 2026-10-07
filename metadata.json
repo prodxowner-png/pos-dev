@@ -1,0 +1,6 @@
+{
+  "name": "PRODX Enterprise POS & Cloud Ops",
+  "description": "Production-ready Point of Sale, Automated Database Migration Engine, Real-Time System Monitoring, Security RBAC, and Docker CI/CD Architecture.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

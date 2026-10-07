@@ -1,0 +1,81 @@
+version: "3.9"
+
+services:
+  prodx-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: prodx-pos-enterprise
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=postgresql://prodx_admin:prodx_secure_pw@postgres-primary:5432/prodx_pos?sslmode=disable
+      - REDIS_URL=redis://redis-cache:6379/0
+      - SESSION_SECRET=prodx-enterprise-hmac-sha256-key-2026
+      - RATE_LIMIT_WINDOW_MS=60000
+      - RATE_LIMIT_MAX_REQUESTS=120
+      - AUTO_MIGRATE_ON_BOOT=true
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+      redis-cache:
+        condition: service_healthy
+    networks:
+      - prodx-enterprise-net
+
+  postgres-primary:
+    image: postgres:16-alpine
+    container_name: prodx-postgres-primary
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=prodx_admin
+      - POSTGRES_PASSWORD=prodx_secure_pw
+      - POSTGRES_DB=prodx_pos
+    ports:
+      - "5432:5432"
+    volumes:
+      - prodx_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U prodx_admin -d prodx_pos"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - prodx-enterprise-net
+
+  redis-cache:
+    image: redis:7-alpine
+    container_name: prodx-redis-cache
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - prodx_redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - prodx-enterprise-net
+
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: prodx-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    networks:
+      - prodx-enterprise-net
+
+volumes:
+  prodx_pgdata:
+  prodx_redisdata:
+
+networks:
+  prodx-enterprise-net:
+    driver: bridge

@@ -1,0 +1,120 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    /* Design System Tokens - Professional Neutral (Zinc) */
+    --brand-primary: #059669;    /* Emerald 600 */
+    --brand-primary-light: #ecfdf5; /* Emerald 50 */
+    --brand-primary-dark: #064e3b;  /* Emerald 900 */
+    
+    --ui-bg: #fafafa;           /* Zinc 50 */
+    --ui-surface: #ffffff;      /* Pure White */
+    --ui-surface-hover: #f4f4f5; /* Zinc 100 */
+    --ui-border: #e4e4e7;       /* Zinc 200 */
+    --ui-border-strong: #d4d4d8; /* Zinc 300 */
+    
+    --ui-text-main: #09090b;    /* Zinc 950 */
+    --ui-text-muted: #71717a;   /* Zinc 500 */
+    --ui-text-quiet: #a1a1aa;   /* Zinc 400 */
+    
+    --ui-shadow-soft: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --ui-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  }
+
+  html,
+  body {
+    max-width: 100vw;
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+    background-color: var(--ui-bg);
+    color: var(--ui-text-main);
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  #root {
+    max-width: 100vw;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  code, pre, .font-mono, .tabular-nums {
+    font-family: 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  .prodx-card {
+    background-color: var(--ui-surface);
+    border: 1px solid var(--ui-border);
+    border-radius: 1.5rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .prodx-card-hover:hover {
+    border-color: var(--brand-primary);
+    box-shadow: var(--ui-shadow-md);
+    transform: translateY(-2px);
+  }
+
+  .prodx-btn-primary {
+    background-color: var(--brand-primary);
+    color: white;
+    font-weight: 600;
+    border-radius: 9999px;
+    transition: all 0.2s;
+  }
+  
+  .prodx-btn-primary:hover {
+    background-color: var(--brand-primary-dark);
+    box-shadow: 0 10px 15px -3px rgba(5, 150, 105, 0.3);
+  }
+}
+
+/* Cross-browser no-scrollbar utility for smooth swipeable pills and navbars */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Cart Item Row transition & flash effect */
+#POS .cart-item-row {
+  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes cartRowFlash {
+  0% {
+    background-color: rgba(16, 185, 129, 0.3);
+    border-color: rgba(52, 211, 153, 0.8);
+    box-shadow: 0 0 16px rgba(16, 185, 129, 0.35);
+  }
+  100% {
+    background-color: transparent;
+    border-color: var(--ui-border);
+    box-shadow: none;
+  }
+}
+
+#POS .cart-item-row.is-updated {
+  animation: cartRowFlash 0.5s ease-out forwards;
+}
+
