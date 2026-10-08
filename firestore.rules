@@ -1,103 +1,90 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    // 1. Global Safety Net
     match /{document=**} {
       allow read, write: if false;
     }
 
-    // --- Helpers ---
     function isSignedIn() {
       return request.auth != null;
     }
 
     function isEmailVerified() {
-      return request.auth.token.email_verified == true;
-    }
-
-    function isOwner(data) {
-      return isSignedIn() && data.userId == request.auth.uid;
+      return isSignedIn() && request.auth.token.email_verified == true;
     }
 
     function isAdmin() {
-      return isSignedIn() && (
-        request.auth.token.email == "kamkokaewthodsawat@gmail.com" ||
+      return isEmailVerified() && (
+        request.auth.token.admin == true ||
         exists(/databases/$(database)/documents/admins/$(request.auth.uid))
       );
     }
 
-    function isValidId(id) {
-      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    function validId(id) {
+      return id is string &&
+             id.size() > 0 &&
+             id.size() <= 128 &&
+             id.matches('^[a-zA-Z0-9_-]+$');
     }
 
-    function incoming() {
-      return request.resource.data;
-    }
-
-    function existing() {
-      return resource.data;
-    }
-
-    // --- Entity Validations ---
-
-    function isValidProduct(data) {
+    function validProduct(data) {
       return data.keys().hasAll(['sku', 'barcode', 'nameTh', 'nameEn', 'category', 'priceSatang', 'costSatang', 'stock']) &&
-             data.sku is string && data.sku.size() <= 100 &&
+             data.keys().hasOnly(['id', 'sku', 'barcode', 'nameTh', 'nameEn', 'category', 'priceSatang', 'costSatang', 'stock', 'lowStockThreshold', 'taxRatePercent']) &&
+             data.sku is string && data.sku.size() > 0 && data.sku.size() <= 100 &&
              data.barcode is string && data.barcode.size() <= 50 &&
              data.nameTh is string && data.nameTh.size() <= 200 &&
              data.nameEn is string && data.nameEn.size() <= 200 &&
              data.category in ['COFFEE', 'BAKERY', 'BEVERAGE', 'MERCHANDISE'] &&
              data.priceSatang is int && data.priceSatang >= 0 &&
              data.costSatang is int && data.costSatang >= 0 &&
-             data.stock is int && data.stock >= 0;
+             data.stock is int && data.stock >= 0 &&
+             data.get('lowStockThreshold', 0) is int && data.get('lowStockThreshold', 0) >= 0 &&
+             data.get('taxRatePercent', 0) is int && data.get('taxRatePercent', 0) >= 0;
     }
 
-    function isValidOrder(data) {
-      return data.keys().hasAll(['orderNumber', 'items', 'totalSatang', 'status', 'idempotencyKey', 'createdAt']) &&
-             data.orderNumber is string &&
-             data.items is list &&
-             data.totalSatang is int &&
+    function validOrder(data) {
+      return data.keys().hasAll(['id', 'orderNumber', 'storeId', 'shiftId', 'cashierName', 'items', 'subtotalSatang', 'discountSatang', 'vatSatang', 'totalSatang', 'paymentMethod', 'status', 'idempotencyKey', 'createdAt']) &&
+             data.orderNumber is string && data.orderNumber.size() > 0 && data.orderNumber.size() <= 64 &&
+             data.items is list && data.items.size() > 0 && data.items.size() <= 100 &&
+             data.subtotalSatang is int && data.subtotalSatang >= 0 &&
+             data.discountSatang is int && data.discountSatang >= 0 && data.discountSatang <= data.subtotalSatang &&
+             data.vatSatang is int && data.vatSatang >= 0 &&
+             data.totalSatang is int && data.totalSatang == data.subtotalSatang - data.discountSatang + data.vatSatang &&
+             data.paymentMethod in ['PROMPTPAY_QR', 'CASH', 'CREDIT_CARD', 'SPLIT'] &&
              data.status in ['COMPLETED', 'REFUNDED', 'VOIDED'] &&
-             data.idempotencyKey is string &&
+             data.idempotencyKey is string && data.idempotencyKey.size() > 0 && data.idempotencyKey.size() <= 128 &&
              data.createdAt is timestamp;
     }
 
-    function isValidAuditLog(data) {
-      return data.keys().hasAll(['sequenceNo', 'timestamp', 'actorId', 'action', 'entryHash']) &&
-             data.sequenceNo is int &&
-             data.timestamp == request.time &&
-             data.actorId == request.auth.uid &&
-             data.action is string &&
-             data.entryHash is string;
-    }
-
-    // --- Collections ---
-
     match /products/{productId} {
-      allow read: if true;
-      allow write: if true; 
+      allow read: if isEmailVerified();
+      allow create, update: if isAdmin() && validId(productId) && validProduct(request.resource.data);
+      allow delete: if isAdmin() && validId(productId);
     }
 
     match /orders/{orderId} {
-      allow read: if true;
-      allow write: if true;
+      allow read: if isEmailVerified();
+      allow create, update, delete: if false;
     }
 
     match /auditLogs/{logId} {
-      allow read: if true;
-      allow create: if true;
+      allow read: if isAdmin();
+      allow create, update, delete: if false;
     }
 
     match /receiptLogs/{logId} {
-      allow read, write: if true;
+      allow read: if isEmailVerified();
+      allow create, update, delete: if false;
     }
 
     match /loginThrottles/{throttleId} {
-      allow read, write: if true;
+      allow read, write: if isAdmin() || (isEmailVerified() && throttleId == request.auth.uid);
     }
 
     match /admins/{adminId} {
-      allow read, write: if true;
+      allow read: if isAdmin();
+      allow create, update, delete: if isAdmin() && validId(adminId);
     }
   }
 }
