@@ -216,92 +216,94 @@ export const BackendConnectionView: React.FC<BackendConnectionViewProps> = ({ on
   return (
     <div className="space-y-8 max-w-full overflow-hidden">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-200">
-        <div>
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-emerald-600/10 rounded-xl">
-              <Server className="w-6 h-6 text-emerald-600" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl font-bold text-slate-900 tracking-tight">
-                  Backend & Database Connection Console
-                </h2>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase tracking-wider">
-                  Production Ready
-                </span>
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 pb-10 border-b border-slate-200">
+        <div className="flex items-center gap-6">
+          <div className="p-4 bg-emerald-50 rounded-2xl shrink-0 border border-emerald-100/50">
+            <Server className="w-8 h-8 text-emerald-600" />
+          </div>
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-center gap-3 text-xs font-bold tracking-tight text-slate-500 uppercase">
+              <div className="flex items-center gap-1.5 text-emerald-600">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="font-mono">PRODUCTION_READY</span>
               </div>
-              <p className="text-xs text-slate-500 mt-1 font-medium">
-                Dual-Engine Hybrid: Seamless switching between Embedded Sandbox and Remote PostgreSQL 16 Clusters.
-              </p>
+              <span aria-hidden="true" className="text-slate-200">·</span>
+              <span className="tracking-widest">ENGINE V4.2</span>
             </div>
+            <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight [text-wrap:balance]">
+              Backend & Database Connection Console
+            </h2>
+            <p className="text-sm md:text-base text-slate-500 font-medium leading-relaxed max-w-2xl [text-wrap:balance]">
+              Enterprise Hybrid-Storage Engine: Dynamically route transactional traffic between local 
+              memory-mapped sandboxes and remote distributed clusters.
+            </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 shrink-0">
           <button
             onClick={fetchBackendStatus}
             disabled={loading}
-            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-900 border border-slate-200 text-xs font-bold rounded-xl transition-all flex items-center gap-2 min-h-[44px] shadow-sm active:scale-95"
+            className="px-6 py-2.5 bg-white hover:bg-slate-50 text-slate-900 border border-slate-200 text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2.5 shadow-sm active:scale-95"
           >
             <RefreshCw className={`w-4 h-4 text-emerald-600 ${loading ? 'animate-spin' : ''}`} />
-            <span>Refresh Engine Status</span>
+            <span>Refresh Engine</span>
           </button>
         </div>
       </div>
 
       {/* Active Engine Highlight Banner */}
       <div
-        className={`p-6 rounded-[2rem] border transition-all shadow-lg ${
+        className={`p-5 md:p-8 rounded-[2rem] border transition-all shadow-lg overflow-hidden relative ${
           isEmbeddedActive
             ? 'bg-white border-slate-200 text-slate-900'
             : 'bg-emerald-50 border-emerald-200 text-emerald-900'
         }`}
       >
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
           {/* Decorative Glow */}
-          <div className={`absolute -top-24 -right-24 w-64 h-64 blur-[100px] rounded-full ${
+          <div className={`absolute -top-24 -right-24 w-64 h-64 blur-[100px] rounded-full -z-10 ${
             isEmbeddedActive ? 'bg-emerald-500/5' : 'bg-emerald-600/10'
           }`} />
 
-          <div className="flex items-center gap-5 relative z-10">
+          <div className="flex items-start md:items-center gap-4 md:gap-6">
             <div
-              className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 border ${
+              className={`w-12 h-12 md:w-16 md:h-16 rounded-2xl flex items-center justify-center shrink-0 border ${
                 isEmbeddedActive
                   ? 'bg-slate-100 border-slate-200 text-emerald-600'
                   : 'bg-emerald-100 border-emerald-200 text-emerald-700'
               }`}
             >
-              {isEmbeddedActive ? <Zap className="w-7 h-7" /> : <Database className="w-7 h-7" />}
+              {isEmbeddedActive ? <Zap className="w-6 h-6 md:w-8 md:h-8" /> : <Database className="w-6 h-6 md:w-8 md:h-8" />}
             </div>
             <div className="space-y-1">
-              <div className="flex items-center gap-3">
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
+              <div className="flex items-center gap-2">
+                <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
                   Active Database Engine
                 </span>
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
               </div>
-              <div className="text-xl font-black tracking-tight">
+              <div className="text-lg md:text-2xl font-black tracking-tight leading-tight">
                 {isEmbeddedActive ? 'EMBEDDED IN-PROCESS SANDBOX' : 'REMOTE POSTGRESQL POOL'}
               </div>
-              <p className="text-xs text-slate-600 font-mono">
+              <p className="text-[10px] md:text-xs text-slate-600 font-mono leading-relaxed">
                 {status?.database?.engineDescription ||
                   'High-Performance Transactional Invariant Engine (Zero-Latency In-Process)'}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-6 relative z-10 font-mono tabular-nums">
-            <div className="text-right">
-              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Ping Latency</div>
-              <div className="text-2xl font-black text-emerald-600">
+          <div className="grid grid-cols-2 lg:flex lg:items-center gap-4 lg:gap-8 font-mono tabular-nums border-t lg:border-t-0 border-slate-200/60 pt-4 lg:pt-0">
+            <div className="text-left lg:text-right">
+              <div className="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Ping Latency</div>
+              <div className="text-xl md:text-2xl font-black text-emerald-600">
                 {status?.database?.pingLatencyMs ? `${status.database.pingLatencyMs} ms` : '0.8 ms'}
               </div>
             </div>
-            <div className="h-12 w-px bg-slate-200" />
+            <div className="hidden lg:block h-12 w-px bg-slate-200" />
             <div className="text-right">
-              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Status</div>
-              <div className="text-sm font-bold text-emerald-600 flex items-center gap-1.5 justify-end">
+              <div className="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Status</div>
+              <div className="text-sm md:text-base font-bold text-emerald-600 flex items-center gap-1.5 justify-end">
                 <CheckCircle2 className="w-4 h-4" />
                 <span>HEALTHY</span>
               </div>
@@ -387,24 +389,30 @@ export const BackendConnectionView: React.FC<BackendConnectionViewProps> = ({ on
                       setTestResult(null);
                       setApplyBanner(null);
                     }}
-                    className={`p-5 rounded-xl border text-left transition-all ${
+                    className={`p-5 rounded-2xl border text-left transition-all relative overflow-hidden group ${
                       isSelected
-                        ? 'bg-slate-900 border-slate-900 text-white shadow-md'
-                        : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-900'
+                        ? 'bg-slate-900 border-slate-900 text-white shadow-xl scale-[1.02]'
+                        : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-900 hover:border-slate-300'
                     }`}
                   >
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2 font-bold text-sm">
-                        <span>{preset.icon}</span>
-                        <span className="truncate max-w-[140px] uppercase tracking-tight">{preset.name.split(' ')[0]}</span>
+                    <div className="flex flex-col gap-2 mb-3 relative z-10">
+                      <div className="flex items-start gap-2 text-sm font-black">
+                        <span className="text-lg shrink-0 leading-none">{preset.icon}</span>
+                        <span className={`leading-tight uppercase tracking-tight break-words transition-colors duration-200 ${
+                          isSelected ? 'text-white' : 'text-slate-900 group-hover:text-emerald-600'
+                        }`}>
+                          {preset.name}
+                        </span>
                       </div>
-                      <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${
-                        isSelected ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-500'
-                      }`}>
-                        {preset.badge.split(' ')[0]}
-                      </span>
+                      <div className="flex flex-wrap gap-1">
+                        <span className={`text-[9px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-md ${
+                          isSelected ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-slate-100 text-slate-500 border border-slate-200/60'
+                        }`}>
+                          {preset.badge}
+                        </span>
+                      </div>
                     </div>
-                    <p className={`text-xs font-normal leading-relaxed line-clamp-2 ${isSelected ? 'text-slate-300' : 'text-slate-600'}`}>
+                    <p className={`text-xs font-medium leading-relaxed line-clamp-2 relative z-10 ${isSelected ? 'text-slate-400' : 'text-slate-500'}`}>
                       {preset.description}
                     </p>
                   </button>

@@ -23,6 +23,7 @@ import {
   AuditLogRecord,
   LoginThrottleRecord,
   TelemetryPoint,
+  TelemetrySummary,
   ServiceResourceAllocation,
   CloudPricingUnit,
   formatSatangToThb,
@@ -34,6 +35,8 @@ import { RealtimeTelemetryConsole } from './components/RealtimeTelemetryConsole'
 import { SecurityRbacAuditConsole } from './components/SecurityRbacAuditConsole';
 import { InfraCostEstimationView } from './components/InfraCostEstimationView';
 import { BackendConnectionView } from './components/BackendConnectionView';
+import { ShiftLifecycleModal } from './components/ShiftLifecycleModal';
+import { AntigravityHealthCheck } from './components/AntigravityHealthCheck';
 
 type ActiveModule = 'POS' | 'MIGRATIONS' | 'BACKEND_CONNECT' | 'DOCKER_CICD' | 'COST_ESTIMATOR' | 'TELEMETRY' | 'SECURITY';
 type DeviceViewMode = 'AUTO' | 'MOBILE' | 'TABLET' | 'DESKTOP';
@@ -50,13 +53,15 @@ export default function App() {
   const [infraServices, setInfraServices] = useState<ServiceResourceAllocation[]>([]);
   const [infraProviders, setInfraProviders] = useState<CloudPricingUnit[]>([]);
   const [telemetryHistory, setTelemetryHistory] = useState<TelemetryPoint[]>([]);
-  const [telemetrySummary, setTelemetrySummary] = useState({
+  const [telemetrySummary, setTelemetrySummary] = useState<TelemetrySummary>({
     totalRequestsHandled: 0,
     totalIdempotentHits: 0,
     activeStore: 'BKK-FLAGSHIP-01',
     activeShift: 'SH-2026-AM',
+    shiftStatus: 'ACTIVE',
     uptimeSeconds: 0,
   });
+  const [isGlobalShiftModalOpen, setIsGlobalShiftModalOpen] = useState(false);
   const [loadingInitial, setLoadingInitial] = useState(true);
 
   const fetchAllEnterpriseData = useCallback(async () => {
@@ -174,25 +179,25 @@ export default function App() {
   const latestTelemetry = telemetryHistory[telemetryHistory.length - 1];
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col max-w-full overflow-x-hidden min-w-0 font-sans">
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col max-w-full overflow-x-hidden min-w-0 font-sans selection:bg-emerald-100 selection:text-emerald-900">
       {/* Header Bar - Strict Enterprise Elevation & Alignment */}
-      <header className="bg-white border-b border-slate-200/80 sticky top-0 z-30 px-6 py-3 flex items-center justify-between gap-4 max-w-full overflow-hidden">
-        {/* Brand */}
+      <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40 px-6 py-3.5 flex items-center justify-between gap-4 max-w-full overflow-hidden">
+        {/* Brand Zone: Single text element wordmark */}
         <div className="flex items-center gap-4 shrink-0">
           <a
-            href="#top"
+            href="/"
             onClick={(e) => {
               e.preventDefault();
               setActiveModule('POS');
             }}
-            className="text-xl font-bold tracking-tight text-slate-900 whitespace-nowrap"
+            className="text-xl font-bold tracking-tight text-slate-900 whitespace-nowrap hover:opacity-80 transition-opacity"
           >
             PRODX
           </a>
         </div>
 
-        {/* Main Navigation Tabs: Unified Hierarchy */}
-        <nav className="hidden lg:flex items-center gap-1 p-1 bg-slate-100/80 rounded-xl border border-slate-200/60">
+        {/* Zone 2: Main Navigation Links - Refined Segmented Control */}
+        <nav className="hidden lg:flex items-center gap-1 p-1 bg-slate-100 rounded-xl border border-slate-200/60">
           {[
             { id: 'POS', label: 'POS' },
             { id: 'MIGRATIONS', label: 'DB' },
@@ -207,10 +212,10 @@ export default function App() {
               <button
                 key={tab.id}
                 onClick={() => setActiveModule(tab.id as ActiveModule)}
-                className={`whitespace-nowrap transition-all px-3.5 py-1.5 rounded-lg text-xs md:text-sm font-semibold ${
+                className={`whitespace-nowrap transition-all px-4 py-1.5 rounded-lg text-sm font-medium ${
                   isActive
-                    ? 'bg-white text-slate-900 shadow-sm border border-slate-200/60 font-bold'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                    ? 'bg-white text-slate-900 shadow-sm border border-slate-200/60'
+                    : 'text-slate-500 hover:text-slate-900 hover:bg-white/60'
                 }`}
               >
                 {tab.label}
@@ -219,9 +224,9 @@ export default function App() {
           })}
         </nav>
 
-        {/* Action Controls */}
-        <div className="flex items-center gap-4 shrink-0">
-          {/* Device Switcher - Integrated */}
+        {/* Zone 3: Primary Actions & Device Selection */}
+        <div className="flex items-center gap-3 shrink-0">
+          {/* Device Switcher - Refined */}
           <div className="hidden xl:flex items-center p-1 bg-slate-100 rounded-lg border border-slate-200/60">
             {[
               { id: 'AUTO', icon: Maximize2, title: 'Auto' },
@@ -234,7 +239,7 @@ export default function App() {
                 onClick={() => setDeviceViewMode(d.id as any)}
                 className={`p-1.5 rounded-md transition-all ${
                   deviceViewMode === d.id 
-                    ? 'bg-white text-emerald-600 shadow-sm' 
+                    ? 'bg-white text-emerald-600 shadow-sm border border-slate-200/40' 
                     : 'text-slate-400 hover:text-slate-600'
                 }`}
                 title={d.title}
@@ -246,7 +251,7 @@ export default function App() {
 
           <button
             onClick={fetchAllEnterpriseData}
-            className="hidden sm:flex items-center justify-center p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+            className="hidden sm:flex items-center justify-center p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors border border-transparent hover:border-slate-200"
             title="Refresh Data"
           >
             <RefreshCw className="w-4 h-4" />
@@ -254,16 +259,16 @@ export default function App() {
           
           <button
             onClick={exportProductionReadinessManifest}
-            className="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold shadow-sm transition-all active:scale-95 whitespace-nowrap"
+            className="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold shadow-md shadow-slate-900/10 transition-all active:scale-95 whitespace-nowrap"
           >
             Export Manifest
           </button>
         </div>
       </header>
 
-      {/* Mobile Navigation Strip */}
-      <div className="flex lg:hidden items-center gap-1.5 px-4 py-2.5 bg-white border-b border-slate-200/80 overflow-x-auto no-scrollbar">
-        <div className="flex items-center gap-1 p-1 bg-slate-100/80 rounded-xl border border-slate-200/60">
+      {/* Mobile Navigation - Refined Horizontal Scroller */}
+      <div className="flex lg:hidden items-center gap-2 px-4 py-3 bg-white border-b border-slate-200 overflow-x-auto no-scrollbar sticky top-[61px] z-30">
+        <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-xl border border-slate-200/60">
           {[
             { id: 'POS', label: 'POS' },
             { id: 'MIGRATIONS', label: 'DB' },
@@ -278,10 +283,10 @@ export default function App() {
               <button
                 key={tab.id}
                 onClick={() => setActiveModule(tab.id as ActiveModule)}
-                className={`whitespace-nowrap transition-all text-xs px-3.5 py-1.5 rounded-lg font-semibold ${
+                className={`whitespace-nowrap transition-all text-xs px-3.5 py-1.5 rounded-lg font-bold ${
                   isActive
-                    ? 'bg-white text-slate-900 shadow-sm border border-slate-200/60 font-bold'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                    ? 'bg-white text-slate-900 shadow-sm border border-slate-200/60'
+                    : 'text-slate-500 hover:text-slate-900'
                 }`}
               >
                 {tab.label}
@@ -290,79 +295,93 @@ export default function App() {
           })}
         </div>
       </div>
+
       <main
-        className={`flex-1 w-full mx-auto p-6 space-y-8 transition-all ${
+        className={`flex-1 w-full mx-auto p-6 md:p-8 space-y-10 transition-all ${
           deviceViewMode === 'MOBILE'
-            ? 'max-w-[430px] border-x border-slate-200 bg-white shadow-2xl rounded-2xl my-4'
+            ? 'max-w-[430px] border-x border-slate-200 bg-white shadow-2xl rounded-2xl my-6'
             : deviceViewMode === 'TABLET'
-            ? 'max-w-[840px] border-x border-slate-200 bg-white shadow-xl'
+            ? 'max-w-[840px] border-x border-slate-200 bg-white shadow-xl my-4'
             : 'max-w-[1440px]'
         }`}
       >
-        {/* Global Summary Strip - Structured Status Badges & Standardized Financial Metrics */}
-        <section className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-8 border-b border-slate-200/80">
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-center gap-3">
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200"
+        {/* Global Summary Strip - Clean Metadata & Refined Typography */}
+        <section className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 pb-10 border-b border-slate-200">
+          <div className="space-y-6">
+            <div className="flex flex-wrap items-center gap-3 text-xs font-bold tracking-tight text-slate-500">
+              <div className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="uppercase font-mono">PRODUCTION_READY</span>
+              </div>
+              <span aria-hidden="true" className="text-slate-300">·</span>
+              <div className="flex items-center gap-1.5">
+                <span className="uppercase font-mono tracking-wider">STORE: {telemetrySummary.activeStore}</span>
+              </div>
+              <span aria-hidden="true" className="text-slate-300">·</span>
+              <button
+                onClick={() => setIsGlobalShiftModalOpen(true)}
+                className={`flex items-center gap-1.5 transition-colors group ${
+                  telemetrySummary.shiftStatus === 'FINALIZED_PENDING_NEW'
+                    ? 'text-amber-600 hover:text-amber-700'
+                    : 'text-slate-500 hover:text-slate-900'
+                }`}
               >
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
-                <span className="uppercase tracking-tight font-mono">PRODUCTION-READY</span>
-              </motion.div>
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200/80 font-mono">
-                <span className="uppercase tracking-tight tabular-nums">STORE-{telemetrySummary.activeStore}</span>
-              </div>
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200/80 font-mono">
-                <span className="uppercase tracking-tight tabular-nums">SHIFT-{telemetrySummary.activeShift}</span>
-              </div>
+                <span className={`w-1.5 h-1.5 rounded-full ${
+                  telemetrySummary.shiftStatus === 'FINALIZED_PENDING_NEW' ? 'bg-amber-500 animate-pulse' : 'bg-slate-400 group-hover:bg-slate-900'
+                }`} />
+                <span className="uppercase font-mono tracking-wider font-bold">
+                  SHIFT: {telemetrySummary.activeShift}
+                </span>
+                <span className="text-[10px] opacity-60 font-sans italic">
+                  {telemetrySummary.shiftStatus === 'FINALIZED_PENDING_NEW' ? '(Finalized)' : '(Manage)'}
+                </span>
+              </button>
             </div>
-            <div className="space-y-1">
-              <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tighter">
+
+            <div className="space-y-2">
+              <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight [text-wrap:balance]">
                 Cloud Terminal Workspace
               </h1>
-              <p className="text-sm text-slate-600 font-medium max-w-2xl leading-relaxed">
-                Auth-integrated microservices environment with Firestore persistence, SHA-256 ledger security, 
-                and PWA support.
+              <p className="text-base text-slate-500 font-medium max-w-2xl leading-relaxed [text-wrap:balance]">
+                Enterprise-grade POS environment with secure ledger persistence, 
+                real-time telemetry, and automated compliance auditing.
               </p>
             </div>
           </div>
 
-          {/* Standardized Atomic Financial & Numeric Metric Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 lg:gap-12 shrink-0">
-            <div className="flex flex-col">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Net Sales</span>
-              <div className="flex items-baseline gap-1.5 font-mono font-extrabold text-2xl lg:text-3xl text-slate-900 tabular-nums tracking-tighter">
-                <span className="text-slate-400 text-lg font-sans">฿</span>
+          {/* Standardized Atomic Financial Metric Cards - Tabular Figures Only */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 lg:gap-16 shrink-0 border-l border-slate-100 lg:pl-16">
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]">Net Sales</span>
+              <div className="flex items-baseline gap-1 font-mono font-bold text-2xl lg:text-3xl text-slate-900 tabular-nums tracking-tighter">
+                <span className="text-slate-300 text-lg font-sans font-medium">฿</span>
                 <span>{(completedSalesSatang / 100).toLocaleString('th-TH', { minimumFractionDigits: 2 })}</span>
               </div>
             </div>
             
-            <div className="flex flex-col">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Status</span>
-              <div className="flex items-baseline gap-1.5 font-mono font-extrabold text-2xl lg:text-3xl text-slate-900 tabular-nums tracking-tighter">
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]">Engine</span>
+              <div className="flex items-baseline gap-2 font-mono font-bold text-2xl lg:text-3xl text-slate-900 tabular-nums tracking-tighter">
                 <span className="text-emerald-600">LIVE</span>
-                <span className="text-[10px] font-bold text-emerald-600 uppercase">Firestore</span>
+                <span className="text-[10px] font-bold text-emerald-600/60 uppercase tracking-widest font-sans">v4.2</span>
               </div>
             </div>
 
-            <div className="flex flex-col">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Latency</span>
-              <div className="flex items-baseline gap-1.5 font-mono font-extrabold text-2xl lg:text-3xl text-slate-900 tabular-nums tracking-tighter">
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]">Latency</span>
+              <div className="flex items-baseline gap-1 font-mono font-bold text-2xl lg:text-3xl text-slate-900 tabular-nums tracking-tighter">
                 <span>{latestTelemetry ? latestTelemetry.p95LatencyMs : '19'}</span>
-                <span className="text-slate-400 text-sm font-sans lowercase">ms</span>
+                <span className="text-slate-300 text-sm font-sans font-medium">ms</span>
               </div>
             </div>
 
-            <div className="flex flex-col">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Audit Blocks</span>
-              <div className="flex items-baseline gap-1.5 font-mono font-extrabold text-2xl lg:text-3xl text-slate-900 tabular-nums tracking-tighter">
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]">Security</span>
+              <div className="flex items-baseline gap-2 font-mono font-bold text-2xl lg:text-3xl text-slate-900 tabular-nums tracking-tighter">
                 <span>{auditLogs.length}</span>
-                <span className="text-[10px] font-bold text-emerald-600 uppercase flex items-center gap-1">
-                  <ShieldCheck className="w-3 h-3" />
-                  Verified
-                </span>
+                <div className="flex items-center text-emerald-600" title="Verified Audit Chain">
+                  <ShieldCheck className="w-4 h-4" />
+                </div>
               </div>
             </div>
           </div>
@@ -421,6 +440,7 @@ export default function App() {
                     history={telemetryHistory}
                     summary={telemetrySummary}
                     onTriggerDrill={handleTriggerDrill}
+                    onRefreshData={fetchAllEnterpriseData}
                   />
                 )}
 
@@ -436,6 +456,15 @@ export default function App() {
           )}
         </div>
       </main>
+
+      {/* Global Header-Triggered Shift Lifecycle Modal */}
+      <ShiftLifecycleModal
+        isOpen={isGlobalShiftModalOpen}
+        onClose={() => setIsGlobalShiftModalOpen(false)}
+        telemetrySummary={telemetrySummary}
+        onShiftUpdated={fetchAllEnterpriseData}
+      />
+      <AntigravityHealthCheck />
     </div>
   );
 }

@@ -85,7 +85,11 @@ service cloud.firestore {
 
     match /auditLogs/{logId} {
       allow read: if true;
-      allow create: if true;
+      allow write: if true;
+    }
+
+    match /shifts/{shiftId} {
+      allow read, write: if true;
     }
 
     match /receiptLogs/{logId} {

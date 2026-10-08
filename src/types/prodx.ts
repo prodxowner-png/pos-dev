@@ -122,6 +122,49 @@ export interface LoginThrottleRecord {
   lastAttemptAt: string;
 }
 
+export interface TelemetrySummary {
+  totalRequestsHandled: number;
+  totalIdempotentHits: number;
+  activeStore: string;
+  activeShift: string;
+  shiftStartedAt?: string;
+  shiftStatus?: 'ACTIVE' | 'FINALIZED_PENDING_NEW';
+  shiftOrdersCount?: number;
+  shiftSalesSatang?: number;
+  uptimeSeconds: number;
+}
+
+export interface ShiftRecord {
+  shiftId: string;
+  storeId: string;
+  startedAt: string;
+  endedAt: string | null;
+  status: 'ACTIVE' | 'FINALIZED';
+  cashierName: string;
+  finalizedBy?: string;
+  ordersCount: number;
+  totalSalesSatang: number;
+  totalVatSatang: number;
+  totalDiscountSatang: number;
+  handoverNotes?: string;
+  openingFloatSatang?: number;
+  auditLogId?: string;
+  auditLogHash?: string;
+}
+
+export interface FinalizeShiftPayload {
+  supervisorPin: string;
+  finalizedBy?: string;
+  handoverNotes?: string;
+}
+
+export interface StartNewShiftPayload {
+  newShiftId: string;
+  cashierName?: string;
+  openingFloatSatang?: number;
+  notes?: string;
+}
+
 export interface TelemetryPoint {
   timestamp: string;
   p50LatencyMs: number;

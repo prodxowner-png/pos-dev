@@ -179,15 +179,25 @@ export const DockerCicdBlueprintView: React.FC = () => {
   return (
     <div className="space-y-8 max-w-full overflow-hidden">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-200">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-bold tracking-widest uppercase rounded border border-emerald-100">
-              Infrastructure
-            </span>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Deployment Topology</h1>
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 pb-10 border-b border-slate-200">
+        <div className="min-w-0 flex items-center gap-6">
+          <div className="p-4 bg-emerald-50 rounded-2xl shrink-0 border border-emerald-100/50">
+            <Container className="w-8 h-8 text-emerald-600" />
           </div>
-          <p className="text-slate-500 text-sm italic">Multi-tier Cloud Run & High-Performance POS Workloads.</p>
+          <div className="space-y-2">
+            <div className="flex items-center gap-3 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
+              <span className="text-emerald-600">Infrastructure Blueprint</span>
+              <span aria-hidden="true" className="text-slate-200">/</span>
+              <span>Multi-Stage Topology</span>
+            </div>
+            <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight [text-wrap:balance]">
+              Deployment & Container Orchestration
+            </h2>
+            <p className="text-sm md:text-base text-slate-500 font-medium leading-relaxed max-w-2xl [text-wrap:balance]">
+              Enterprise-grade container definitions for Cloud Run, Kubernetes, and 
+              High-Availability POS clusters with automated quality gates.
+            </p>
+          </div>
         </div>
       </div>
 

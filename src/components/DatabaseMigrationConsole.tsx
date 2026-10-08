@@ -43,23 +43,34 @@ export const DatabaseMigrationConsole: React.FC<DatabaseMigrationConsoleProps> =
   return (
     <div className="space-y-8 max-w-full overflow-hidden">
       {/* Header & Automated Verification Trigger */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-200">
-        <div className="min-w-0">
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">
-            Database Engine
-          </h2>
-          <p className="text-sm text-slate-500 mt-1 font-medium leading-relaxed">
-            Automated PostgreSQL migration lifecycle with advisory locking and SHA-256 checksum integrity.
-          </p>
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 pb-10 border-b border-slate-200">
+        <div className="min-w-0 flex items-center gap-6">
+          <div className="p-4 bg-emerald-50 rounded-2xl shrink-0 border border-emerald-100/50">
+            <Database className="w-8 h-8 text-emerald-600" />
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center gap-3 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
+              <span className="text-emerald-600">PostgreSQL 16.4</span>
+              <span aria-hidden="true" className="text-slate-200">/</span>
+              <span>SHA-256 Checksum Verified</span>
+            </div>
+            <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight [text-wrap:balance]">
+              Database Migration Engine
+            </h2>
+            <p className="text-sm md:text-base text-slate-500 font-medium leading-relaxed max-w-2xl [text-wrap:balance]">
+              Automated schema lifecycle management with advisory locking, atomic transitions, 
+              and real-time financial invariant enforcement.
+            </p>
+          </div>
         </div>
 
         <button
           onClick={handleRunVerify}
           disabled={verifying}
-          className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold uppercase tracking-widest rounded-full transition-all flex items-center gap-2 shadow-md shadow-emerald-600/20 active:scale-95 whitespace-nowrap"
+          className="px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-sm font-bold uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-3 shadow-lg shadow-emerald-600/20 active:scale-95 whitespace-nowrap"
         >
           <Play className="w-4 h-4 shrink-0" />
-          <span>{verifying ? 'Running...' : 'Verify Schema'}</span>
+          <span>{verifying ? 'Verifying Integrity...' : 'Verify Schema'}</span>
         </button>
       </div>
 

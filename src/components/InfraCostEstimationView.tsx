@@ -301,35 +301,41 @@ export const InfraCostEstimationView: React.FC<InfraCostEstimationViewProps> = (
   return (
     <div className="space-y-8 max-w-full overflow-hidden">
       {/* Header & Export Strip */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-200">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2 py-0.5 bg-slate-100 text-slate-700 text-[10px] font-bold tracking-widest uppercase rounded border border-slate-200">
-              Finance
-            </span>
-            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
-              Cost Engine
-            </h2>
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 pb-10 border-b border-slate-200">
+        <div className="min-w-0 flex items-center gap-6">
+          <div className="p-4 bg-indigo-50 rounded-2xl shrink-0 border border-indigo-100/50">
+            <Calculator className="w-8 h-8 text-indigo-600" />
           </div>
-          <p className="text-sm text-slate-500 italic">
-            Projected hosting costs based on <code className="bg-slate-50 px-1.5 py-0.5 rounded text-indigo-600 font-mono text-xs border border-slate-200/60">docker-compose.yml</code> microservices architecture.
-          </p>
+          <div className="space-y-2">
+            <div className="flex items-center gap-3 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
+              <span className="text-indigo-600">Financial Modeling</span>
+              <span aria-hidden="true" className="text-slate-200">/</span>
+              <span>TCO Projection</span>
+            </div>
+            <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight [text-wrap:balance]">
+              Infrastructure Cost Engine
+            </h2>
+            <p className="text-sm md:text-base text-slate-500 font-medium leading-relaxed max-w-2xl [text-wrap:balance]">
+              Projected hosting costs based on microservices orchestration, commitment tiers, 
+              and regional currency fluctuation modeling.
+            </p>
+          </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 shrink-0">
           <button
             onClick={handleResetToDefault}
-            className="px-4 py-2 bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 text-xs font-bold rounded-xl transition-all flex items-center gap-2 shadow-sm active:scale-95"
+            className="px-5 py-2.5 bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm active:scale-95"
           >
             <RotateCcw className="w-4 h-4" />
             <span>Reset</span>
           </button>
           <button
             onClick={exportTcoReport}
-            className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-2 shadow-md active:scale-95"
+            className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg active:scale-95"
           >
             <Download className="w-4 h-4" />
-            <span>Export Report</span>
+            <span>Export TCO</span>
           </button>
         </div>
       </div>

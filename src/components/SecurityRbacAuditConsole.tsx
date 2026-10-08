@@ -31,6 +31,13 @@ const RBAC_MATRIX = [
     manager: 'ALLOWED',
   },
   {
+    permission: 'SHIFT_FINALIZE_AND_RECONCILE',
+    description: 'ปิดกะการขายและลงนามประทับตรารับรองใน Audit Log ด้วยรหัสผ่าน Supervisor (0030_m5)',
+    cashier: 'PIN_OVERRIDE_REQUIRED',
+    supervisor: 'ALLOWED',
+    manager: 'ALLOWED',
+  },
+  {
     permission: 'INVENTORY_MANUAL_ADJUST',
     description: 'ปรับยอดสต็อกพร้อมระบุ Reason Code (0023_m4)',
     cashier: 'DENIED',
@@ -163,21 +170,32 @@ export const SecurityRbacAuditConsole: React.FC<SecurityRbacAuditConsoleProps> =
   return (
     <div className="space-y-8 max-w-full overflow-hidden">
       {/* Header & Interactive Security Drills */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-200">
-        <div className="min-w-0">
-          <h2 className="text-slate-900 font-bold text-base md:text-lg tracking-tight">
-            Security & Audit
-          </h2>
-          <p className="text-slate-600 font-normal text-sm leading-relaxed mt-1">
-            Role-based access control, cryptographic hash chaining, and login throttling.
-          </p>
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 pb-10 border-b border-slate-200">
+        <div className="min-w-0 flex items-center gap-6">
+          <div className="p-4 bg-emerald-50 rounded-2xl shrink-0 border border-emerald-100/50">
+            <Shield className="w-8 h-8 text-emerald-600" />
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center gap-3 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
+              <span className="text-emerald-600">Secure Vault Active</span>
+              <span aria-hidden="true" className="text-slate-200">/</span>
+              <span>SHA-256 Chained</span>
+            </div>
+            <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight [text-wrap:balance]">
+              Security & Audit Console
+            </h2>
+            <p className="text-sm md:text-base text-slate-500 font-medium leading-relaxed max-w-2xl [text-wrap:balance]">
+              Enterprise Governance Engine: Automated RBAC enforcement, cryptographic non-repudiation, 
+              and real-time login sentinel monitoring.
+            </p>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3 shrink-0">
           <button
             onClick={handleTestImmutabilityTrigger}
             disabled={testingTrigger}
-            className="px-6 py-2.5 bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 text-xs font-bold uppercase tracking-widest rounded-full transition-all flex items-center gap-2 shadow-sm"
+            className="flex-1 sm:flex-initial px-6 py-3 bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 text-[10px] font-black uppercase tracking-[0.2em] rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm active:scale-95"
           >
             <AlertOctagon className="w-4 h-4 shrink-0" />
             <span>Test Immutability</span>
@@ -186,7 +204,7 @@ export const SecurityRbacAuditConsole: React.FC<SecurityRbacAuditConsoleProps> =
           <button
             onClick={() => handleSimulateBruteForce(false)}
             disabled={testingThrottle}
-            className="px-6 py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold uppercase tracking-widest rounded-full transition-all flex items-center gap-2 shadow-sm"
+            className="flex-1 sm:flex-initial px-6 py-3 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-[10px] font-black uppercase tracking-[0.2em] rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm active:scale-95"
           >
             <KeyRound className="w-4 h-4 text-amber-600 shrink-0" />
             <span>Simulate Failure</span>

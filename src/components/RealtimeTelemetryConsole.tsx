@@ -1,27 +1,26 @@
 import React, { useState } from 'react';
-import { Activity, Cpu, Database, Flame, RefreshCw, TerminalSquare } from 'lucide-react';
-import { TelemetryPoint } from '../types/prodx';
+import { Activity, Cpu, Database, Flame, RefreshCw, TerminalSquare, ShieldCheck, Lock, Clock, History, ArrowRight } from 'lucide-react';
+import { TelemetryPoint, TelemetrySummary } from '../types/prodx';
+import { ShiftLifecycleModal } from './ShiftLifecycleModal';
 
 interface RealtimeTelemetryConsoleProps {
   history: TelemetryPoint[];
-  summary: {
-    totalRequestsHandled: number;
-    totalIdempotentHits: number;
-    activeStore: string;
-    activeShift: string;
-    uptimeSeconds: number;
-  };
+  summary: TelemetrySummary;
   onTriggerDrill: (mode: 'SPIKE' | 'NORMAL') => Promise<void>;
+  onRefreshData?: () => Promise<void>;
 }
 
 export const RealtimeTelemetryConsole: React.FC<RealtimeTelemetryConsoleProps> = ({
   history,
   summary,
   onTriggerDrill,
+  onRefreshData,
 }) => {
   const [prometheusRaw, setPrometheusRaw] = useState<string | null>(null);
   const [loadingMetrics, setLoadingMetrics] = useState(false);
   const [drillLoading, setDrillLoading] = useState(false);
+  const [isShiftModalOpen, setIsShiftModalOpen] = useState(false);
+  const [shiftModalInitialStep, setShiftModalInitialStep] = useState<'FINALIZE' | 'PROMPT_NEW' | 'HISTORY'>('FINALIZE');
 
   const latest: TelemetryPoint = history[history.length - 1] || {
     timestamp: new Date().toISOString(),
@@ -37,6 +36,7 @@ export const RealtimeTelemetryConsole: React.FC<RealtimeTelemetryConsoleProps> =
   };
 
   const isElevatedLatency = latest.p95LatencyMs > 60;
+  const isShiftFinalized = summary.shiftStatus === 'FINALIZED_PENDING_NEW';
 
   const fetchPrometheusScrape = async () => {
     setLoadingMetrics(true);
@@ -58,27 +58,129 @@ export const RealtimeTelemetryConsole: React.FC<RealtimeTelemetryConsoleProps> =
     }
   };
 
+  const openFinalizeShiftModal = () => {
+    setShiftModalInitialStep(isShiftFinalized ? 'PROMPT_NEW' : 'FINALIZE');
+    setIsShiftModalOpen(true);
+  };
+
+  const openShiftHistoryModal = () => {
+    setShiftModalInitialStep('HISTORY');
+    setIsShiftModalOpen(true);
+  };
+
   return (
     <div className="space-y-8 max-w-full overflow-hidden">
+      {/* Active Shift Telemetry Governance Panel */}
+      <div className={`p-6 rounded-[1.5rem] border transition-all ${
+        isShiftFinalized
+          ? 'bg-amber-50 border-amber-200 shadow-sm'
+          : 'bg-white border-slate-200 shadow-sm'
+      }`}>
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-center gap-4 text-[10px] font-bold tracking-tight text-slate-500 uppercase">
+              <div className="flex items-center gap-1.5">
+                <span className="font-mono tracking-widest text-slate-400">Shift Target</span>
+              </div>
+              <span aria-hidden="true" className="text-slate-200">·</span>
+              <span className="px-2 py-0.5 rounded bg-slate-900 text-white font-mono tracking-wider font-black">
+                {summary.activeShift}
+              </span>
+              <span aria-hidden="true" className="text-slate-200">·</span>
+              <div className={`flex items-center gap-1.5 font-bold ${
+                isShiftFinalized ? 'text-amber-600' : 'text-emerald-600'
+              }`}>
+                <div className={`w-1.5 h-1.5 rounded-full ${
+                  isShiftFinalized ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'
+                }`} />
+                <span>{isShiftFinalized ? 'FINALIZED' : 'ACTIVE_OPERATIONAL'}</span>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-x-8 gap-y-3 text-[13px] text-slate-600 font-medium">
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-slate-300" />
+                <span className="font-mono tabular-nums">
+                  Started: {summary.shiftStartedAt ? new Date(summary.shiftStartedAt).toLocaleTimeString('th-TH') : '08:00 AM'}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Orders</span>
+                <span className="font-bold text-slate-900 tabular-nums font-mono">{summary.shiftOrdersCount ?? 0}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Revenue</span>
+                <span className="font-bold text-emerald-700 tabular-nums font-mono">
+                  ฿{(((summary.shiftSalesSatang ?? 0) / 100)).toLocaleString('th-TH', { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons for Ending Shift */}
+          <div className="flex flex-wrap items-center gap-3 shrink-0">
+            <button
+              onClick={openShiftHistoryModal}
+              className="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold rounded-xl transition-all shadow-sm flex items-center gap-1.5 active:scale-95"
+            >
+              <History className="w-3.5 h-3.5 text-slate-400" />
+              <span>Shift History</span>
+            </button>
+
+            <button
+              onClick={openFinalizeShiftModal}
+              className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 shadow-sm active:scale-95 ${
+                isShiftFinalized
+                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20'
+                  : 'bg-slate-900 hover:bg-slate-800 text-white'
+              }`}
+            >
+              {isShiftFinalized ? (
+                <>
+                  <ArrowRight className="w-4 h-4" />
+                  <span>Prompt New Shift Identifier</span>
+                </>
+              ) : (
+                <>
+                  <Lock className="w-4 h-4 text-emerald-400" />
+                  <span>End Shift & Finalize Audit</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Header & Chaos Latency Drill Controls */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-200">
-        <div className="min-w-0">
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">
-            System Telemetry
-          </h2>
-          <p className="text-sm text-slate-500 mt-1 font-medium">
-            Real-time monitoring of API latency, throughput, and resource allocation.
-          </p>
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 pb-10 border-b border-slate-200">
+        <div className="min-w-0 flex items-center gap-6">
+          <div className="p-4 bg-emerald-50 rounded-2xl shrink-0 border border-emerald-100/50">
+            <Activity className="w-8 h-8 text-emerald-600" />
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center gap-3 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
+              <span className="text-emerald-600">LIVE FEED</span>
+              <span aria-hidden="true" className="text-slate-200">/</span>
+              <span>PROMETHEUS SCRAPE ACTIVE</span>
+            </div>
+            <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight [text-wrap:balance]">
+              System Telemetry Console
+            </h2>
+            <p className="text-sm md:text-base text-slate-500 font-medium leading-relaxed max-w-2xl [text-wrap:balance]">
+              Real-time observation of API throughput, resource utilization, and distributional latency 
+              with automated drift detection.
+            </p>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3 shrink-0">
           <button
             onClick={() => handleDrill(isElevatedLatency ? 'NORMAL' : 'SPIKE')}
             disabled={drillLoading}
-            className={`px-6 py-2.5 text-xs font-bold uppercase tracking-widest rounded-full transition-all flex items-center gap-2 shadow-md active:scale-95 ${
+            className={`flex-1 sm:flex-initial px-6 py-3 text-xs font-bold uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-3 shadow-lg active:scale-95 ${
               isElevatedLatency
                 ? 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-600/20'
-                : 'bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100'
+                : 'bg-white text-slate-900 border border-slate-200 hover:bg-slate-50'
             }`}
           >
             <Flame className="w-4 h-4 shrink-0" />
@@ -92,7 +194,7 @@ export const RealtimeTelemetryConsole: React.FC<RealtimeTelemetryConsoleProps> =
           <button
             onClick={fetchPrometheusScrape}
             disabled={loadingMetrics}
-            className="px-6 py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold uppercase tracking-widest rounded-full transition-all flex items-center gap-2 shadow-sm active:scale-95"
+            className="flex-1 sm:flex-initial px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-bold uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm active:scale-95"
           >
             <TerminalSquare className="w-4 h-4 text-emerald-600 shrink-0" />
             <span>Raw Metrics</span>
@@ -100,62 +202,65 @@ export const RealtimeTelemetryConsole: React.FC<RealtimeTelemetryConsoleProps> =
         </div>
       </div>
 
-      {/* Primary KPI Strip */}
+      {/* Primary KPI Strip - Standardized Atomic Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-full">
-        <div className="p-5 bg-white border border-slate-200 rounded-xl shadow-sm space-y-3">
-          <div className="flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+        <div className="p-6 bg-white border border-slate-200 rounded-2xl shadow-sm space-y-4 group hover:border-emerald-200 transition-all">
+          <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]">
             <span>API Latency</span>
-            <Activity className="w-4 h-4 text-emerald-600 shrink-0" />
+            <Activity className="w-4 h-4 text-emerald-600 shrink-0 group-hover:scale-110 transition-transform" />
           </div>
-          <div className="text-xl font-bold font-mono tabular-nums text-slate-900">
-            {latest.p50LatencyMs} <span className="text-slate-400 font-normal">/</span>{' '}
+          <div className="text-2xl font-bold font-mono tabular-nums text-slate-900 tracking-tighter">
+            {latest.p50LatencyMs} <span className="text-slate-300 font-normal">/</span>{' '}
             <span className={isElevatedLatency ? 'text-amber-600' : 'text-emerald-600'}>
               {latest.p95LatencyMs}
             </span>{' '}
-            <span className="text-slate-400 font-normal">/</span> {latest.p99LatencyMs}
-            <span className="text-xs ml-1 text-slate-500 font-sans">ms</span>
+            <span className="text-slate-300 font-normal">/</span> {latest.p99LatencyMs}
+            <span className="text-xs ml-1.5 text-slate-400 font-sans font-medium">ms</span>
           </div>
-          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">
-            Status: {isElevatedLatency ? 'Warning' : 'Nominal'}
+          <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest">
+            <div className={`w-1 h-1 rounded-full ${isElevatedLatency ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`} />
+            <span className={isElevatedLatency ? 'text-amber-600' : 'text-slate-500'}>
+              {isElevatedLatency ? 'Elevated Drift' : 'Nominal Baseline'}
+            </span>
           </div>
         </div>
 
-        <div className="p-5 bg-white border border-slate-200 rounded-xl shadow-sm space-y-3">
-          <div className="flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+        <div className="p-6 bg-white border border-slate-200 rounded-2xl shadow-sm space-y-4 group hover:border-emerald-200 transition-all">
+          <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]">
             <span>Throughput</span>
-            <RefreshCw className="w-4 h-4 text-emerald-600 shrink-0" />
+            <RefreshCw className="w-4 h-4 text-emerald-600 shrink-0 group-hover:rotate-180 transition-transform duration-700" />
           </div>
-          <div className="text-xl font-bold font-mono tabular-nums text-slate-900">
-            {latest.rps} <span className="text-xs font-sans text-slate-500">req/s</span>
+          <div className="text-2xl font-bold font-mono tabular-nums text-slate-900 tracking-tighter">
+            {latest.rps} <span className="text-xs font-sans font-medium text-slate-400 ml-1">req/s</span>
           </div>
-          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-tight tabular-nums">
-            Handled: {summary.totalRequestsHandled}
+          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest tabular-nums">
+            Total: {summary.totalRequestsHandled.toLocaleString()}
           </div>
         </div>
 
-        <div className="p-5 bg-white border border-slate-200 rounded-xl shadow-sm space-y-3">
-          <div className="flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+        <div className="p-6 bg-white border border-slate-200 rounded-2xl shadow-sm space-y-4 group hover:border-emerald-200 transition-all">
+          <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]">
             <span>DB Pool</span>
-            <Database className="w-4 h-4 text-emerald-600 shrink-0" />
+            <Database className="w-4 h-4 text-emerald-600 shrink-0 group-hover:scale-110 transition-transform" />
           </div>
-          <div className="text-xl font-bold font-mono tabular-nums text-slate-900">
-            {latest.dbActiveConnections} <span className="text-slate-400 font-normal">/</span> {latest.dbIdleConnections}
+          <div className="text-2xl font-bold font-mono tabular-nums text-slate-900 tracking-tighter">
+            {latest.dbActiveConnections} <span className="text-slate-300 font-normal">/</span> {latest.dbIdleConnections}
           </div>
-          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">
-            Active / Idle Connections
+          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            Active vs Idle Pool
           </div>
         </div>
 
-        <div className="p-5 bg-white border border-slate-200 rounded-xl shadow-sm space-y-3">
-          <div className="flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+        <div className="p-6 bg-white border border-slate-200 rounded-2xl shadow-sm space-y-4 group hover:border-emerald-200 transition-all">
+          <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]">
             <span>Resources</span>
-            <Cpu className="w-4 h-4 text-emerald-600 shrink-0" />
+            <Cpu className="w-4 h-4 text-emerald-600 shrink-0 group-hover:scale-110 transition-transform" />
           </div>
-          <div className="text-xl font-bold font-mono tabular-nums text-slate-900">
-            {latest.cpuPercent}% <span className="text-slate-400 font-normal">/</span> {latest.memoryMb}MB
+          <div className="text-2xl font-bold font-mono tabular-nums text-slate-900 tracking-tighter">
+            {latest.cpuPercent}% <span className="text-slate-300 font-normal">/</span> {latest.memoryMb}MB
           </div>
-          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-tight font-mono">
-            CPU / RAM Usage
+          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest font-mono">
+            SYS: CORE_CPU_ALLOC
           </div>
         </div>
       </div>
@@ -278,6 +383,19 @@ export const RealtimeTelemetryConsole: React.FC<RealtimeTelemetryConsoleProps> =
           </pre>
         </div>
       )}
+
+      {/* Official Shift Lifecycle Modal */}
+      <ShiftLifecycleModal
+        isOpen={isShiftModalOpen}
+        onClose={() => setIsShiftModalOpen(false)}
+        telemetrySummary={summary}
+        initialStep={shiftModalInitialStep}
+        onShiftUpdated={async () => {
+          if (onRefreshData) {
+            await onRefreshData();
+          }
+        }}
+      />
     </div>
   );
 };
