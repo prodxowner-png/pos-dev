@@ -410,7 +410,7 @@ async function startServer() {
     }
   }));
 
-  app.get('/api/telemetry', asyncHandler(async (_req: Request, res: Response) => {
+  app.get('/api/telemetry', requireAuth, requireAdmin, asyncHandler(async (_req: Request, res: Response) => {
     res.json({
       history: telemetryHistory,
       summary: {
@@ -494,6 +494,7 @@ async function startServer() {
         });
         t.update(prodRef, { stock: prod.stock - rawLine.qty });
       }
+      if (discountSatang > subtotalSatang) throw new Error('DISCOUNT_EXCEEDS_SUBTOTAL');
       const vatSatang = Math.round((subtotalSatang - discountSatang) * 0.07);
       const totalSatang = (subtotalSatang - discountSatang) + vatSatang;
       const createdAt = new Date().toISOString();
@@ -554,9 +555,11 @@ async function startServer() {
   }));
 
   app.post('/api/receipts/email', requireAuth, asyncHandler(async (req: Request, res: Response) => {
-    const { order, orderId, recipientEmail } = req.body || {};
-    let targetOrder = order;
-    if (!targetOrder && orderId) {
+    const { orderId, recipientEmail } = req.body || {};
+    if (typeof orderId !== 'string' || !orderId) return res.status(400).json({ error: 'ORDER_ID_REQUIRED' });
+    if (typeof recipientEmail !== 'string' || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(recipientEmail)) return res.status(400).json({ error: 'INVALID_RECIPIENT_EMAIL' });
+    let targetOrder;
+    if (orderId) {
       const orderDoc = await db.collection('orders').doc(orderId).get();
       targetOrder = orderDoc.data();
     }
