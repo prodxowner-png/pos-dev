@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { initializeApp as initializeAdminApp, getApps as getAdminApps, getApp as getAdminApp } from 'firebase-admin/app';
+import { getAuth, DecodedIdToken } from 'firebase-admin/auth';
 import { getFirestore, Timestamp, FieldValue } from 'firebase-admin/firestore';
 import firebaseConfig from './firebase-applet-config.json' with { type: 'json' };
 
@@ -28,6 +29,38 @@ const adminApp = getAdminApps().length > 0
 
 const databaseId = firebaseConfig.firestoreDatabaseId || '(default)';
 const db = getFirestore(adminApp, databaseId);
+const auth = getAuth(adminApp);
+
+type AuthenticatedRequest = Request & { user: DecodedIdToken };
+
+const requireAuth = asyncHandler(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  const header = req.headers.authorization;
+  if (!header?.startsWith('Bearer ')) return res.status(401).json({ error: 'AUTH_REQUIRED' });
+  try {
+    req.user = await auth.verifyIdToken(header.slice(7), true);
+    next();
+  } catch {
+    return res.status(401).json({ error: 'INVALID_AUTH_TOKEN' });
+  }
+});
+
+const requireAdmin = asyncHandler(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  const claims = req.user;
+  if (claims.admin === true) return next();
+  const adminDoc = await db.collection('admins').doc(claims.uid).get();
+  if (!adminDoc.exists) return res.status(403).json({ error: 'ADMIN_REQUIRED' });
+  next();
+});
+
+const requireSupervisor = asyncHandler(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  const claims = req.user;
+  if (claims.admin === true || claims.supervisor === true) return next();
+  const adminDoc = await db.collection('admins').doc(claims.uid).get();
+  if (!adminDoc.exists || adminDoc.data()?.role !== 'SHIFT_SUPERVISOR') {
+    return res.status(403).json({ error: 'SUPERVISOR_REQUIRED' });
+  }
+  next();
+});
 
 console.log(`[PRODX] Initialized Firestore Admin SDK for project: ${firebaseConfig.projectId}, database: ${databaseId}`);
 
@@ -65,7 +98,7 @@ export interface PosOrderRecord {
   discountSatang: number;
   vatSatang: number;
   totalSatang: number;
-  paymentMethod: 'PROMPTPAY_QR' | 'CASH' | 'CREDIT_CARD';
+  paymentMethod: 'PROMPTPAY_QR' | 'CASH' | 'CREDIT_CARD' | 'SPLIT';
   status: 'COMPLETED' | 'REFUNDED' | 'VOIDED';
   idempotencyKey: string;
   supervisorPinUsed?: string;
@@ -244,7 +277,7 @@ async function seedFirestore() {
   }
 }
 
-seedFirestore().catch(console.error);
+// Production must never auto-seed data on process startup. Use an explicit, reviewed seed job.
 
 async function appendImmutableAuditLog(params: {
   actorId: string;
@@ -256,17 +289,17 @@ async function appendImmutableAuditLog(params: {
   ipAddress?: string;
 }): Promise<AuditLogRecord> {
   const auditCol = db.collection('auditLogs');
-  const snapshot = await auditCol.orderBy('sequenceNo', 'desc').limit(1).get();
-  const lastDoc = snapshot.docs[0];
-  const lastData = lastDoc?.data() as AuditLogRecord | undefined;
+  const result = await db.runTransaction(async (t: any) => {
+    const snapshot = await t.get(auditCol.orderBy('sequenceNo', 'desc').limit(1));
+    const lastDoc = snapshot.docs[0];
+    const lastData = lastDoc?.data() as AuditLogRecord | undefined;
+    const sequenceNo = (lastData?.sequenceNo || 0) + 1;
+    const prevHash = lastData?.entryHash || '0000000000000000000000000000000000000000000000000000000000000000';
+    const timestamp = new Date().toISOString();
+    const rawPayload = `${sequenceNo}|${timestamp}|${params.actorId}|${params.action}|${params.resourceId}|${params.details}|${prevHash}`;
+    const entryHash = computeSha256(rawPayload);
 
-  const sequenceNo = (lastData?.sequenceNo || 0) + 1;
-  const prevHash = lastData?.entryHash || '0000000000000000000000000000000000000000000000000000000000000000';
-  const timestamp = new Date().toISOString();
-  const rawPayload = `${sequenceNo}|${timestamp}|${params.actorId}|${params.action}|${params.resourceId}|${params.details}|${prevHash}`;
-  const entryHash = computeSha256(rawPayload);
-
-  const record: AuditLogRecord = {
+    const record: AuditLogRecord = {
     id: `aud-${Date.now()}-${sequenceNo}`,
     sequenceNo,
     timestamp,
@@ -276,16 +309,18 @@ async function appendImmutableAuditLog(params: {
     resourceType: params.resourceType,
     resourceId: params.resourceId,
     details: params.details,
-    prevHash: prevHash.slice(0, 16),
-    entryHash: entryHash.slice(0, 16),
+    prevHash,
+    entryHash,
     ipAddress: params.ipAddress || '10.24.0.12',
   };
 
-  await auditCol.doc(record.id).set({
-    ...record,
-    rulesTimestamp: FieldValue.serverTimestamp()
+    t.set(auditCol.doc(record.id), {
+      ...record,
+      rulesTimestamp: FieldValue.serverTimestamp()
+    });
+    return record;
   });
-  return record;
+  return result;
 }
 
 // Real-time telemetry buffer
@@ -388,20 +423,20 @@ async function startServer() {
     });
   }));
 
-  app.post('/api/telemetry/drill', asyncHandler(async (req: Request, res: Response) => {
+  app.post('/api/telemetry/drill', requireAuth, requireAdmin, asyncHandler(async (req: Request, res: Response) => {
     const { mode } = req.body || {};
     chaosLatencySpikeMs = mode === 'SPIKE' ? 140 : 0;
     recordTelemetryTick();
     res.json({ ok: true, chaosLatencySpikeMs });
   }));
 
-  app.get('/api/catalog', asyncHandler(async (_req: Request, res: Response) => {
+  app.get('/api/catalog', requireAuth, asyncHandler(async (_req: Request, res: Response) => {
     const snapshot = await db.collection('products').get();
     res.json({ products: snapshot.docs.map((doc: any) => doc.data()) });
   }));
 
-  app.post('/api/inventory/adjust', asyncHandler(async (req: Request, res: Response) => {
-    const { productId, deltaQty, reasonCode, actorName } = req.body;
+  app.post('/api/inventory/adjust', requireAuth, requireAdmin, asyncHandler(async (req: Request, res: Response) => {
+    const { productId, deltaQty, reasonCode } = req.body;
     const docRef = db.collection('products').doc(productId);
     await db.runTransaction(async (t: any) => {
       const productDoc = await t.get(docRef);
@@ -413,7 +448,7 @@ async function startServer() {
     });
     
     await appendImmutableAuditLog({
-      actorId: actorName || 'usr-mgr-01',
+      actorId: (req as AuthenticatedRequest).user.uid,
       actorRole: 'STORE_MANAGER',
       action: `INVENTORY_ADJUST_${reasonCode || 'RECOUNT'}`,
       resourceType: 'INVENTORY',
@@ -424,13 +459,18 @@ async function startServer() {
     res.json({ ok: true });
   }));
 
-  app.get('/api/orders', asyncHandler(async (_req: Request, res: Response) => {
+  app.get('/api/orders', requireAuth, asyncHandler(async (_req: Request, res: Response) => {
     const snapshot = await db.collection('orders').orderBy('createdAt', 'desc').limit(50).get();
     res.json({ orders: snapshot.docs.map((doc: any) => doc.data()) });
   }));
 
-  app.post('/api/orders/checkout', asyncHandler(async (req: Request, res: Response) => {
-    const { items, discountSatang = 0, paymentMethod = 'PROMPTPAY_QR', idempotencyKey, cashierName } = req.body;
+  app.post('/api/orders/checkout', requireAuth, asyncHandler(async (req: Request, res: Response) => {
+    const { items, discountSatang = 0, paymentMethod = 'PROMPTPAY_QR', idempotencyKey } = req.body;
+    const actor = (req as AuthenticatedRequest).user;
+    if (!Array.isArray(items) || items.length < 1 || items.length > 100) return res.status(400).json({ error: 'INVALID_ITEMS' });
+    if (!Number.isInteger(discountSatang) || discountSatang < 0) return res.status(400).json({ error: 'INVALID_DISCOUNT' });
+    if (!['PROMPTPAY_QR', 'CASH', 'CREDIT_CARD', 'SPLIT'].includes(paymentMethod)) return res.status(400).json({ error: 'INVALID_PAYMENT_METHOD' });
+    if (typeof idempotencyKey !== 'string' || idempotencyKey.length < 1 || idempotencyKey.length > 128) return res.status(400).json({ error: 'INVALID_IDEMPOTENCY_KEY' });
     const result = await db.runTransaction(async (t: any) => {
       const idemSnapshot = await t.get(db.collection('orders').where('idempotencyKey', '==', idempotencyKey).limit(1));
       if (!idemSnapshot.empty) {
@@ -444,6 +484,7 @@ async function startServer() {
         const prodDoc = await t.get(prodRef);
         if (!prodDoc.exists) throw new Error(`PRODUCT_NOT_FOUND:${rawLine.productId}`);
         const prod = prodDoc.data() as ProductItem;
+        if (!Number.isInteger(rawLine.qty) || rawLine.qty <= 0 || rawLine.qty > 100) throw new Error('INVALID_QUANTITY');
         if (prod.stock < rawLine.qty) throw new Error(`INSUFFICIENT_STOCK:${prod.nameTh}`);
         const lineTotal = prod.priceSatang * rawLine.qty;
         subtotalSatang += lineTotal;
@@ -459,7 +500,7 @@ async function startServer() {
       const orderNumber = `PX-${Date.now()}`;
       const newOrder: PosOrderRecord = {
         id: `ord-${Date.now()}`, orderNumber, storeId: 'BKK-FLAGSHIP-01', shiftId: 'SH-2026-AM',
-        cashierName: cashierName || 'Nattapong S. (Cashier)', items: resolvedLines,
+        cashierName: actor.email || actor.uid, items: resolvedLines,
         subtotalSatang, discountSatang, vatSatang, totalSatang, paymentMethod,
         status: 'COMPLETED', idempotencyKey, createdAt,
       };
@@ -471,19 +512,17 @@ async function startServer() {
     });
 
     await appendImmutableAuditLog({
-      actorId: 'usr-csh-04', actorRole: 'CASHIER', action: 'ORDER_COMMITTED',
+      actorId: actor.uid, actorRole: 'CASHIER', action: 'ORDER_COMMITTED',
       resourceType: 'ORDER', resourceId: result.order.orderNumber, details: `Order committed: ${result.order.totalSatang} Satang`,
     });
 
     res.status(201).json(result);
   }));
 
-  app.post('/api/orders/:orderId/override', asyncHandler(async (req: Request, res: Response) => {
+  app.post('/api/orders/:orderId/override', requireAuth, requireSupervisor, asyncHandler(async (req: Request, res: Response) => {
     const { orderId } = req.params;
-    const { action, supervisorPin, reason } = req.body;
-    if (supervisorPin !== '2580' && supervisorPin !== '9999') {
-      return res.status(403).json({ error: 'INVALID_PIN' });
-    }
+    const { action, reason } = req.body;
+    if (action !== 'VOID' && action !== 'REFUND') return res.status(400).json({ error: 'INVALID_OVERRIDE_ACTION' });
     const orderRef = db.collection('orders').doc(orderId);
     await db.runTransaction(async (t: any) => {
       const orderDoc = await t.get(orderRef);
@@ -491,7 +530,7 @@ async function startServer() {
       const order = orderDoc.data() as PosOrderRecord;
       if (order.status !== 'COMPLETED') throw new Error('ALREADY_FINALIZED');
       const nextStatus = action === 'VOID' ? 'VOIDED' : 'REFUNDED';
-      t.update(orderRef, { status: nextStatus, supervisorPinUsed: 'VERIFIED', reason: reason || 'Customer request' });
+      t.update(orderRef, { status: nextStatus, supervisorPinUsed: 'CLAIM_AUTHORIZED', reason: reason || 'Customer request' });
       for (const line of order.items) {
         const pRef = db.collection('products').doc(line.productId);
         const pDoc = await t.get(pRef);
@@ -502,21 +541,19 @@ async function startServer() {
     });
     
     await appendImmutableAuditLog({
-      actorId: 'usr-sup-01', actorRole: 'SHIFT_SUPERVISOR', action: `ORDER_OVERRIDDEN`,
+      actorId: (req as AuthenticatedRequest).user.uid, actorRole: 'SHIFT_SUPERVISOR', action: `ORDER_OVERRIDDEN`,
       resourceType: 'ORDER', resourceId: orderId, details: `Supervisor override`,
     });
     
     res.json({ ok: true });
   }));
 
-  app.get('/api/receipts/history', asyncHandler(async (_req: Request, res: Response) => {
+  app.get('/api/receipts/history', requireAuth, asyncHandler(async (_req: Request, res: Response) => {
     const snapshot = await db.collection('receiptLogs').orderBy('sentAt', 'desc').limit(20).get();
     res.json({ history: snapshot.docs.map((doc: any) => doc.data()) });
   }));
 
-  app.post('/api/receipts/email', asyncHandler(async (req: Request, res: Response) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader?.startsWith('Bearer ')) return res.status(401).json({ error: 'AUTH_REQUIRED' });
+  app.post('/api/receipts/email', requireAuth, asyncHandler(async (req: Request, res: Response) => {
     const { order, orderId, recipientEmail } = req.body || {};
     let targetOrder = order;
     if (!targetOrder && orderId) {
@@ -534,12 +571,12 @@ async function startServer() {
     res.json({ ok: true, message: 'Receipt sent' });
   }));
 
-  app.get('/api/security/audit-logs', asyncHandler(async (_req: Request, res: Response) => {
+  app.get('/api/security/audit-logs', requireAuth, requireAdmin, asyncHandler(async (_req: Request, res: Response) => {
     const snapshot = await db.collection('auditLogs').orderBy('sequenceNo', 'desc').limit(100).get();
     res.json({ logs: snapshot.docs.map((doc: any) => doc.data()), throttles: [] });
   }));
 
-  app.get('/api/backend/status', asyncHandler(async (_req: Request, res: Response) => {
+  app.get('/api/backend/status', requireAuth, requireAdmin, asyncHandler(async (_req: Request, res: Response) => {
     res.json({
       backend: { 
         platform: 'Node.js 22', 
@@ -566,7 +603,7 @@ async function startServer() {
     });
   }));
 
-  app.post('/api/backend/test-connection', asyncHandler(async (req: Request, res: Response) => {
+  app.post('/api/backend/test-connection', requireAuth, requireAdmin, asyncHandler(async (req: Request, res: Response) => {
     const { connectionString } = req.body;
     const isFirestore = connectionString.includes('firestore') || connectionString.includes('project-');
     
@@ -599,20 +636,20 @@ async function startServer() {
     }
   }));
 
-  app.post('/api/backend/apply-connection', asyncHandler(async (_req: Request, res: Response) => {
+  app.post('/api/backend/apply-connection', requireAuth, requireAdmin, asyncHandler(async (_req: Request, res: Response) => {
     res.json({ 
       ok: true, 
       message: 'Connection configuration applied and persisted to enterprise vault' 
     });
   }));
 
-  app.post('/api/db/migrations/verify', asyncHandler(async (_req: Request, res: Response) => {
+  app.post('/api/db/migrations/verify', requireAuth, requireAdmin, asyncHandler(async (_req: Request, res: Response) => {
     // Simulate verification logic
     await new Promise(resolve => setTimeout(resolve, 800));
     res.json({ ok: true, message: 'Schema integrity verified against baseline 0030_m5' });
   }));
 
-  app.get('/api/db/migrations', asyncHandler(async (_req: Request, res: Response) => {
+  app.get('/api/db/migrations', requireAuth, requireAdmin, asyncHandler(async (_req: Request, res: Response) => {
     const migrations = Array.from({ length: 30 }, (_, i) => ({
       version: (i + 1).toString().padStart(4, '0'),
       milestone: i < 5 ? 'M0' : i < 15 ? 'M1' : i < 25 ? 'M2' : 'M5',
@@ -635,7 +672,7 @@ async function startServer() {
     res.json({ migrations, invariants });
   }));
 
-  app.get('/api/infra-cost', asyncHandler(async (_req: Request, res: Response) => {
+  app.get('/api/infra-cost', requireAuth, requireAdmin, asyncHandler(async (_req: Request, res: Response) => {
     res.json({
       services: [
         { id: 'svc-1', name: 'PRODX API Gateway', containerImage: 'gcr.io/prodx/api:v2.6.2', role: 'API_FRONTEND', instances: 3, cpuCores: 2, memoryGb: 4, storageGb: 10, storageType: 'EPHEMERAL', networkEgressGbMonthly: 150, highAvailability: true },
@@ -648,7 +685,7 @@ async function startServer() {
     });
   }));
 
-  app.get('/api/backend/diagnostics', asyncHandler(async (_req: Request, res: Response) => {
+  app.get('/api/backend/diagnostics', requireAuth, requireAdmin, asyncHandler(async (_req: Request, res: Response) => {
     const start = Date.now();
     try {
       await db.collection('products').limit(1).get();
