@@ -4,7 +4,7 @@ import crypto from 'crypto';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { initializeApp as initializeAdminApp, getApps as getAdminApps, getApp as getAdminApp } from 'firebase-admin/app';
-import { getAuth, DecodedIdToken } from 'firebase-admin/auth';
+import { getAuth, type DecodedIdToken } from 'firebase-admin/auth';
 import { getFirestore, Timestamp, FieldValue } from 'firebase-admin/firestore';
 import firebaseConfig from './firebase-applet-config.json' with { type: 'json' };
 
@@ -26,6 +26,10 @@ const adminApp = getAdminApps().length > 0
   : initializeAdminApp({
       projectId: "project-869c824b-f067-4d41-947"
     });
+
+const asyncHandler = (fn: any) => (req: Request, res: Response, next: NextFunction) => {
+  return Promise.resolve(fn(req, res, next)).catch(next);
+};
 
 const databaseId = firebaseConfig.firestoreDatabaseId || '(default)';
 const db = getFirestore(adminApp, databaseId);
@@ -138,10 +142,6 @@ export interface TelemetryPoint {
 function computeSha256(content: string): string {
   return crypto.createHash('sha256').update(content).digest('hex');
 }
-
-const asyncHandler = (fn: any) => (req: Request, res: Response, next: NextFunction) => {
-  return Promise.resolve(fn(req, res, next)).catch(next);
-};
 
 // ============================================================================
 // INITIAL ENTERPRISE STATE (SEEDING LOGIC)
