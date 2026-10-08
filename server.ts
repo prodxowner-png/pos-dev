@@ -3,7 +3,7 @@ import { createServer as createViteServer } from 'vite';
 import crypto from 'crypto';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import * as admin from 'firebase-admin';
+import { initializeApp as initializeAdminApp, getApps as getAdminApps, getApp as getAdminApp } from 'firebase-admin/app';
 import { getFirestore, Timestamp, FieldValue } from 'firebase-admin/firestore';
 import firebaseConfig from './firebase-applet-config.json' with { type: 'json' };
 
@@ -14,10 +14,22 @@ const __dirname = path.dirname(__filename);
 // PRODX ENTERPRISE POS & CLOUD OPS - PRODUCTION SERVER (FIRESTORE PERSISTENCE)
 // ============================================================================
 
-const adminApp = admin.apps.length > 0 ? admin.app() : admin.initializeApp({
-  projectId: firebaseConfig.projectId,
+console.log('[PRODX] Environment Variables:', {
+  PROJECT_ID: process.env.PROJECT_ID,
+  GOOGLE_CLOUD_PROJECT: process.env.GOOGLE_CLOUD_PROJECT,
+  FIREBASE_CONFIG: process.env.FIREBASE_CONFIG ? 'DEFINED' : 'UNDEFINED',
 });
-const db = getFirestore(adminApp, firebaseConfig.firestoreDatabaseId);
+
+const adminApp = getAdminApps().length > 0 
+  ? getAdminApp() 
+  : initializeAdminApp({
+      projectId: "project-869c824b-f067-4d41-947"
+    });
+
+const databaseId = firebaseConfig.firestoreDatabaseId || '(default)';
+const db = getFirestore(adminApp, databaseId);
+
+console.log(`[PRODX] Initialized Firestore Admin SDK for project: ${firebaseConfig.projectId}, database: ${databaseId}`);
 
 export interface ProductItem {
   id: string;
@@ -210,15 +222,25 @@ const INITIAL_PRODUCTS: ProductItem[] = [
 ];
 
 async function seedFirestore() {
-  const productsCol = db.collection('products');
-  const snapshot = await productsCol.limit(1).get();
-  if (snapshot.empty) {
-    console.log('[PRODX Firestore] Seeding initial product catalog...');
-    const batch = db.batch();
-    for (const p of INITIAL_PRODUCTS) {
-      batch.set(productsCol.doc(p.id), p);
+  try {
+    const productsCol = db.collection('products');
+    const snapshot = await productsCol.limit(1).get();
+    if (snapshot.empty) {
+      console.log('[PRODX Firestore] Seeding initial product catalog...');
+      const batch = db.batch();
+      for (const p of INITIAL_PRODUCTS) {
+        batch.set(productsCol.doc(p.id), p);
+      }
+      await batch.commit();
+      console.log('[PRODX Firestore] Seeding completed successfully.');
+    } else {
+      console.log('[PRODX Firestore] Catalog already contains data, skipping seed.');
     }
-    await batch.commit();
+  } catch (err: any) {
+    console.error('[PRODX Firestore] Seeding failed:', err);
+    if (err.message?.includes('permission')) {
+      console.warn('[PRODX Firestore] Warning: Possible permission error during seeding. Ensure Admin SDK is correctly configured.');
+    }
   }
 }
 
@@ -307,7 +329,7 @@ setInterval(recordTelemetryTick, 4000);
 
 async function startServer() {
   const app = express();
-  const PORT = Number(process.env.PORT) || 3000;
+  const PORT = 3000;
 
   app.use((req: Request, res: Response, next: NextFunction) => {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
@@ -651,9 +673,23 @@ async function startServer() {
   // Global Error Handler for API routes
   app.use('/api', (err: any, _req: Request, res: Response, _next: NextFunction) => {
     console.error('API Error:', err);
+    console.error('Stack:', err.stack);
+    
+    // Check for common Firestore errors
+    const errorMessage = err.message || 'Internal Server Error';
+    const isPermissionError = errorMessage.toLowerCase().includes('permission') || 
+                            errorMessage.toLowerCase().includes('insufficient');
+    
     res.status(err.status || 500).json({
-      error: err.message || 'Internal Server Error',
-      code: err.code || 'UNKNOWN_ERROR'
+      error: errorMessage,
+      code: err.code || 'UNKNOWN_ERROR',
+      diagnostics: {
+        isPermissionError,
+        databaseId: databaseId,
+        projectId: firebaseConfig.projectId,
+        errorName: err.name,
+        errorStack: process.env.NODE_ENV === 'production' ? undefined : err.stack
+      }
     });
   });
 
