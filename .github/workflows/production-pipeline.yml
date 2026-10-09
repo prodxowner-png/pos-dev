@@ -8,12 +8,10 @@ on:
 
 permissions:
   contents: read
-  packages: write
-  deployments: write
 
 jobs:
   quality-and-security-gate:
-    name: 01. Typecheck, RBAC Audit & Financial Invariants
+    name: Typecheck and production build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -24,6 +22,14 @@ jobs:
         with:
           node-version: "22"
           cache: "npm"
+          cache-dependency-path: package-lock.json
+
+      - name: Verify reproducible npm lockfile exists
+        run: |
+          test -f package-lock.json || {
+            echo "::error::package-lock.json is missing. Generate and commit it from the reviewed package.json before CI can install deterministically."
+            exit 1
+          }
 
       - name: Install dependencies
         run: npm ci
@@ -35,35 +41,20 @@ jobs:
         run: npm run build
 
   postgres-migration-recovery-drill:
-    name: 02. Automated DB Migration & Invariant Drill (0001-0030)
+    name: PostgreSQL migration/invariant gate (blocked until executable runner exists)
     needs: quality-and-security-gate
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: prodx_ci
-          POSTGRES_PASSWORD: prodx_ci_password
-          POSTGRES_DB: prodx_ci_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Verify Migration Chain (0001_m0_foundation to 0030_m5_audit_log_immutability)
-        env:
-          DATABASE_URL: postgresql://prodx_ci:prodx_ci_password@localhost:5432/prodx_ci_test
+      - name: Refuse placeholder migration gate
         run: |
-          echo "Verifying 30 sequential migrations and SHA-256 checksums..."
+          echo "::error::The repository currently has only sparse migration files and no executable migration-chain/checksum/recovery test runner. Do not report the migration gate as passed."
+          exit 1
 
   docker-build-and-cloud-deploy:
-    name: 03. Multi-Stage Docker Build & Cloud Rollout
+    name: Build container and runtime smoke gate
     needs: postgres-migration-recovery-drill
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -75,8 +66,9 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build Production Container Image
-        run: docker build -t ghcr.io/prodx-org/prodx-pos:${{ github.sha }} .
+        run: docker build -t prodx-pos:${{ github.sha }} .
 
-      - name: Run Post-Deploy Runtime Smoke Verification
+      - name: Refuse placeholder runtime smoke gate
         run: |
-          echo "Executing /api/healthz and idempotency smoke check..."
+          echo "::error::No deployment target or executable smoke-test harness is configured. Do not report post-deploy verification as passed."
+          exit 1
