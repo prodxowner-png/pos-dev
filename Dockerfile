@@ -31,6 +31,8 @@ COPY --from=builder --chown=prodx:prodx /app/node_modules ./node_modules
 COPY --from=builder --chown=prodx:prodx /app/dist ./dist
 COPY --from=builder --chown=prodx:prodx /app/server.ts ./server.ts
 COPY --from=builder --chown=prodx:prodx /app/tsconfig.json ./tsconfig.json
+COPY --from=builder --chown=prodx:prodx /app/firebase-applet-config.json ./firebase-applet-config.json
+COPY --from=builder --chown=prodx:prodx /app/index.html ./index.html
 
 USER prodx
 

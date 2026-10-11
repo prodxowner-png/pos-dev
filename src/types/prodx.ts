@@ -13,6 +13,11 @@ export interface ProductItem {
   imageUrl?: string;
 }
 
+export interface CartEntry {
+  product: ProductItem;
+  qty: number;
+}
+
 export interface OrderItemLine {
   productId: string;
   sku: string;
@@ -57,9 +62,33 @@ export interface ShiftDrawerState {
   dropsHistory: ShiftCashDropRecord[];
 }
 
+export interface AppliedPromotion {
+  id: string;
+  name: string;
+  code: string;
+  discountSatang: number;
+  description: string;
+}
+
+export interface FullTaxInvoiceRecord {
+  invoiceNumber: string;
+  issuedAt: string;
+  customerName: string;
+  taxId: string;
+  branchType: 'HEAD_OFFICE' | 'BRANCH';
+  branchNumber: string;
+  address: string;
+  preTaxSatang: number;
+  vatSatang: number;
+  totalSatang: number;
+  posMachineId: string;
+  verificationCode: string;
+}
+
 export interface PosOrderRecord {
   id: string;
   orderNumber: string;
+  queueNumber?: string;
   storeId: string;
   shiftId: string;
   cashierName: string;
@@ -72,11 +101,160 @@ export interface PosOrderRecord {
   payments?: PaymentSplitEntry[];
   cashTenderedSatang?: number;
   cashChangeSatang?: number;
+  customerId?: string;
+  customerName?: string;
+  customerPhone?: string;
+  customerEmail?: string;
+  emailReceiptStatus?: 'PENDING' | 'SENT' | 'FAILED';
+  emailSentAt?: string;
+  pointsEarned?: number;
+  pointsRedeemed?: number;
   status: 'COMPLETED' | 'REFUNDED' | 'VOIDED';
+  kdsStatus?: 'PENDING' | 'PREPARING' | 'READY' | 'COMPLETED';
+  appliedPromotions?: AppliedPromotion[];
+  taxInvoice?: FullTaxInvoiceRecord;
   idempotencyKey: string;
   supervisorPinUsed?: string;
+  supervisorAuthMethod?: 'PIN' | 'WEBAUTHN_BIOMETRIC';
+  supervisorName?: string;
   reason?: string;
+  batchPaymentId?: string;
+  batchNumber?: string;
+  isBatchConsolidated?: boolean;
   createdAt: string;
+}
+
+export interface BatchCheckoutRecord {
+  id: string;
+  batchNumber: string;
+  orderIds: string[];
+  orderNumbers: string[];
+  groupedOrders: PosOrderRecord[];
+  totalOrdersCount: number;
+  totalItemsCount: number;
+  subtotalSatang: number;
+  discountSatang: number;
+  vatSatang: number;
+  totalSatang: number;
+  paymentMethod: 'PROMPTPAY_QR' | 'CASH' | 'CREDIT_CARD' | 'SPLIT' | 'CORPORATE_BILL';
+  payments?: PaymentSplitEntry[];
+  cashTenderedSatang?: number;
+  cashChangeSatang?: number;
+  cardLast4?: string;
+  cashierName: string;
+  storeId: string;
+  shiftId: string;
+  customerOrCompanyName?: string;
+  taxId?: string;
+  contactPhone?: string;
+  contactEmail?: string;
+  notes?: string;
+  authCode?: string;
+  createdAt: string;
+  status: 'SETTLED' | 'VOIDED';
+  settlementHash: string;
+}
+
+export interface BatchPaymentCheckoutPayload {
+  orderIds?: string[];
+  orderNumbers: string[];
+  paymentMethod: 'PROMPTPAY_QR' | 'CASH' | 'CREDIT_CARD' | 'SPLIT' | 'CORPORATE_BILL';
+  cashTenderedSatang?: number;
+  cashChangeSatang?: number;
+  cardLast4?: string;
+  customerOrCompanyName?: string;
+  taxId?: string;
+  contactPhone?: string;
+  contactEmail?: string;
+  notes?: string;
+  cashierName?: string;
+  splitPayments?: PaymentSplitEntry[];
+}
+
+export type BiometricSensorType = 'FINGERPRINT' | 'FACIAL_RECOGNITION' | 'TOUCH_ID' | 'FACE_ID' | 'WINDOWS_HELLO';
+
+export interface SupervisorBiometricProfile {
+  id: string;
+  name: string;
+  role: 'SHIFT_SUPERVISOR' | 'STORE_MANAGER';
+  biometricType: BiometricSensorType;
+  credentialId: string;
+  publicKeyFingerprint: string;
+  enrolledAt: string;
+  lastUsedAt?: string;
+  deviceLabel: string;
+  aaguid?: string;
+}
+
+export interface BiometricAuthResult {
+  verified: boolean;
+  supervisorId: string;
+  supervisorName: string;
+  supervisorRole: 'SHIFT_SUPERVISOR' | 'STORE_MANAGER';
+  method: 'WEBAUTHN_BIOMETRIC';
+  sensorType: BiometricSensorType;
+  credentialId: string;
+  timestamp: string;
+  authenticatorAttachment: 'platform' | 'cross-platform';
+  clientDataJSON?: string;
+  signature?: string;
+}
+
+export interface WebAuthnChallengeResponse {
+  challenge: string;
+  rp: {
+    name: string;
+    id: string;
+  };
+  timeout: number;
+}
+
+export interface CustomerMember {
+  id: string;
+  phone: string;
+  name: string;
+  tier: 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM';
+  pointsBalance: number;
+  totalSpentSatang: number;
+  joinedAt: string;
+}
+
+export interface InterStoreTransferRecord {
+  id: string;
+  sourceStoreId: string;
+  destinationStoreId: string;
+  productId: string;
+  sku: string;
+  productName: string;
+  qty: number;
+  reason: string;
+  supervisorPin: string;
+  timestamp: string;
+  status: 'COMPLETED';
+}
+
+export interface ShelfVelocityAnalytics {
+  topSellers: {
+    productId: string;
+    nameEn: string;
+    category: string;
+    unitsSold: number;
+    revenueSatang: number;
+    profitSatang: number;
+    marginPercent: number;
+  }[];
+  peakHours: {
+    hour: number;
+    hourLabel: string;
+    ordersCount: number;
+    totalSalesSatang: number;
+  }[];
+  grossProfitSummary: {
+    totalRevenueSatang: number;
+    totalCostSatang: number;
+    totalGrossProfitSatang: number;
+    overallMarginPercent: number;
+  };
 }
 
 export interface MigrationItem {
@@ -134,6 +312,15 @@ export interface TelemetrySummary {
   uptimeSeconds: number;
 }
 
+export interface Latency24hSample {
+  timestamp: string;
+  p50LatencyMs: number;
+  p95LatencyMs: number;
+  p99LatencyMs: number;
+  rps: number;
+  isPeakHour?: boolean;
+}
+
 export interface ShiftRecord {
   shiftId: string;
   storeId: string;
@@ -176,6 +363,19 @@ export interface TelemetryPoint {
   dbActiveConnections: number;
   dbIdleConnections: number;
   errorRatePercent: number;
+  diskUsedGb?: number;
+  diskTotalGb?: number;
+  dbMaxPoolSize?: number;
+  memoryTotalMb?: number;
+}
+
+export interface Latency24hPoint {
+  timestamp: string;
+  p50LatencyMs: number;
+  p95LatencyMs: number;
+  p99LatencyMs: number;
+  rps: number;
+  isPeakHour?: boolean;
 }
 
 export type CloudProviderId = 'GCP_CLOUD_RUN' | 'AWS_ECS_FARGATE' | 'AZURE_CONTAINER_APPS' | 'RAILWAY_ENTERPRISE';
@@ -275,4 +475,84 @@ export interface DatabaseSnapshotRecord {
   verifiedAt: string;
   triggeredBy: string;
   note?: string;
+}
+
+export type NotificationSeverity = 'CRITICAL' | 'WARNING' | 'INFO';
+
+export type NotificationCategory =
+  | 'SECURITY_BREACH'
+  | 'SERVER_DOWNTIME'
+  | 'AUTHORIZATION_VIOLATION'
+  | 'DATABASE_LATENCY'
+  | 'INVENTORY_ALERT'
+  | 'SYSTEM_HEALTH';
+
+export interface SystemNotification {
+  id: string;
+  title: string;
+  message: string;
+  severity: NotificationSeverity;
+  category: NotificationCategory;
+  createdAt: string;
+  read: boolean;
+  actorId?: string;
+  sourceIp?: string;
+  resourceId?: string;
+  actionLink?: {
+    module: 'POS' | 'INVENTORY' | 'CUSTOMER_DISPLAY' | 'KDS' | 'MIGRATIONS' | 'BACKEND_CONNECT' | 'DOCKER_CICD' | 'COST_ESTIMATOR' | 'TELEMETRY' | 'SECURITY';
+    label: string;
+  };
+  resolved?: boolean;
+}
+
+export interface NotificationFeedResponse {
+  notifications: SystemNotification[];
+  unreadCount: number;
+  criticalCount: number;
+  serverStatus: {
+    status: 'OPERATIONAL' | 'DEGRADED' | 'DOWNTIME';
+    uptimeSeconds: number;
+    lastPingAt: string;
+    activeThreatsCount: number;
+  };
+}
+
+export interface StockPredictionItem {
+  productId: string;
+  sku: string;
+  nameTh: string;
+  nameEn: string;
+  category: 'COFFEE' | 'BAKERY' | 'BEVERAGE' | 'MERCHANDISE';
+  currentStock: number;
+  lowStockThreshold: number;
+  costSatang: number;
+  priceSatang: number;
+  dailyVelocity: number; // units sold per day
+  hourlyVelocity: number; // units sold per operational hour
+  historicalUnitsSold: number;
+  daysToStockout: number; // calculated Days-to-Stockout
+  hoursToStockout: number;
+  projectedStockoutDate: string; // ISO string
+  daysUntilThreshold: number; // days until reaching lowStockThreshold
+  reorderRecommended: boolean; // boolean flag for 'Reorder Recommended' alert
+  reorderUrgency: 'CRITICAL' | 'WARNING' | 'HEALTHY';
+  reorderReason: string;
+  suggestedReorderQty: number;
+  totalPoCostSatang: number;
+  confidenceScore: number; // 0-100%
+  demandTrend: 'SURGING' | 'STEADY' | 'DECLINING';
+  aiForecastNotes?: string;
+}
+
+export interface InventoryAiForecastSummary {
+  generatedAt: string;
+  source: 'GEMINI_AI' | 'DETERMINISTIC_VELOCITY_ENGINE';
+  modelUsed: string;
+  executiveSummary: string;
+  totalItemsAnalyzed: number;
+  itemsNeedingReorder: number;
+  criticalItemsCount: number;
+  recommendedPoBudgetSatang: number;
+  predictions: StockPredictionItem[];
+  macroInsights: string[];
 }

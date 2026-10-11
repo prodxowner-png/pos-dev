@@ -103,5 +103,13 @@ service cloud.firestore {
     match /admins/{adminId} {
       allow read, write: if true;
     }
+
+    match /batchCheckouts/{batchId} {
+      allow read, write: if true;
+    }
+
+    match /paymentTransactions/{transactionId} {
+      allow read, write: if true;
+    }
   }
 }

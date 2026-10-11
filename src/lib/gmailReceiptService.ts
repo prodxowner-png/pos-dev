@@ -143,6 +143,58 @@ export function generateReceiptHtml(order: PosOrderRecord, storeName = 'PRODX En
       </td>
     </tr>
 
+    <!-- Member Loyalty Points Section -->
+    ${
+      order.customerName || order.pointsEarned || order.pointsRedeemed
+        ? `
+    <tr>
+      <td style="padding: 0 24px 16px 24px;">
+        <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f0fdf4; border: 1px dashed #86efac; border-radius: 8px; padding: 12px; font-size: 12px;">
+          <tr>
+            <td style="color: #166534; font-weight: 700;">PRODX LOYALTY MEMBER</td>
+            <td style="text-align: right; color: #15803d; font-weight: 700;">${order.customerName || 'Loyalty Member'}</td>
+          </tr>
+          ${order.customerPhone ? `<tr><td style="color: #4b5563; padding-top: 4px;">เบอร์สมาชิก:</td><td style="text-align: right; font-family: monospace; padding-top: 4px;">${order.customerPhone}</td></tr>` : ''}
+          ${order.pointsEarned ? `<tr><td style="color: #15803d; font-weight: 600; padding-top: 4px;">แต้มที่ได้รับจากบิลนี้:</td><td style="text-align: right; color: #15803d; font-weight: 700; padding-top: 4px;">+${order.pointsEarned} คะแนน</td></tr>` : ''}
+          ${order.pointsRedeemed ? `<tr><td style="color: #b45309; font-weight: 600; padding-top: 4px;">แต้มที่ใช้แลกส่วนลด:</td><td style="text-align: right; color: #b45309; font-weight: 700; padding-top: 4px;">-${order.pointsRedeemed} คะแนน (-${formatSatangToThb(order.pointsRedeemed * 100)})</td></tr>` : ''}
+        </table>
+      </td>
+    </tr>
+    `
+        : ''
+    }
+
+    <!-- Split Payments Breakdown Section -->
+    ${
+      order.payments && order.payments.length > 0
+        ? `
+    <tr>
+      <td style="padding: 0 24px 16px 24px;">
+        <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; font-size: 12px;">
+          <tr>
+            <td colspan="2" style="font-weight: 700; color: #475569; text-transform: uppercase; font-size: 11px; padding-bottom: 6px;">
+              รายละเอียดการแบ่งชำระ (Split Tenders)
+            </td>
+          </tr>
+          ${order.payments
+            .map(
+              (p) => `
+            <tr>
+              <td style="color: #64748b; padding: 3px 0;">• ${p.method.replace('_', ' ')}</td>
+              <td style="color: #0f172a; font-family: monospace; font-weight: 700; text-align: right; padding: 3px 0;">
+                ${formatSatangToThb(p.amountSatang)}
+              </td>
+            </tr>
+          `
+            )
+            .join('')}
+        </table>
+      </td>
+    </tr>
+    `
+        : ''
+    }
+
     <!-- Security & Barcode Reference Footer -->
     <tr>
       <td style="background-color: #0f172a; padding: 20px; text-align: center; color: #94a3b8; font-size: 12px; line-height: 1.5;">
@@ -199,7 +251,7 @@ export async function sendDigitalReceiptEmail(params: {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${params.accessToken}`,
+        Authorization: `Bearer ${params.accessToken || 'prodx-cashier-session-token'}`,
       },
       body: JSON.stringify({
         order: params.order,

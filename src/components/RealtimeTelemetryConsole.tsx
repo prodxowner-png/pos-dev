@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { Activity, Cpu, Database, Flame, RefreshCw, TerminalSquare, ShieldCheck, Lock, Clock, History, ArrowRight } from 'lucide-react';
-import { TelemetryPoint, TelemetrySummary } from '../types/prodx';
+import { TelemetryPoint, TelemetrySummary, Latency24hPoint } from '../types/prodx';
 import { ShiftLifecycleModal } from './ShiftLifecycleModal';
+import { SystemHealthWidget } from './SystemHealthWidget';
+import { D3LatencyHistogram } from './D3LatencyHistogram';
 
 interface RealtimeTelemetryConsoleProps {
   history: TelemetryPoint[];
   summary: TelemetrySummary;
+  latency24h?: Latency24hPoint[];
   onTriggerDrill: (mode: 'SPIKE' | 'NORMAL') => Promise<void>;
   onRefreshData?: () => Promise<void>;
 }
@@ -13,6 +16,7 @@ interface RealtimeTelemetryConsoleProps {
 export const RealtimeTelemetryConsole: React.FC<RealtimeTelemetryConsoleProps> = ({
   history,
   summary,
+  latency24h,
   onTriggerDrill,
   onRefreshData,
 }) => {
@@ -202,6 +206,13 @@ export const RealtimeTelemetryConsole: React.FC<RealtimeTelemetryConsoleProps> =
         </div>
       </div>
 
+      {/* High-Level System Health Watchdog with Circular Gauges */}
+      <SystemHealthWidget
+        latest={latest}
+        summary={summary}
+        isElevatedLoad={isElevatedLatency}
+      />
+
       {/* Primary KPI Strip - Standardized Atomic Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-full">
         <div className="p-6 bg-white border border-slate-200 rounded-2xl shadow-sm space-y-4 group hover:border-emerald-200 transition-all">
@@ -264,6 +275,13 @@ export const RealtimeTelemetryConsole: React.FC<RealtimeTelemetryConsoleProps> =
           </div>
         </div>
       </div>
+
+      {/* D3-Based 24-Hour p95 Latency Distribution Histogram */}
+      <D3LatencyHistogram
+        samples={latency24h}
+        isChaosElevated={isElevatedLatency}
+        onRefresh={onRefreshData}
+      />
 
       {/* Real-Time Latency Bar Chart & Time-Series Log */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start max-w-full">

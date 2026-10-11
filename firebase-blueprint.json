@@ -91,6 +91,14 @@
     "loginThrottles": {
       "schema": "LoginThrottle",
       "description": "Rate limiting data"
+    },
+    "batchCheckouts": {
+      "schema": "Order",
+      "description": "Batch checkout transaction records"
+    },
+    "paymentTransactions": {
+      "schema": "Order",
+      "description": "PromptPay and E-Wallet transaction records"
     }
   }
 }

@@ -15,8 +15,11 @@ import {
   X,
   Coins,
   Sparkles,
+  Download,
+  FileSignature,
 } from 'lucide-react';
-import { TelemetrySummary, ShiftRecord } from '../types/prodx';
+import { TelemetrySummary, ShiftRecord, PosOrderRecord, AuditLogRecord, LoginThrottleRecord } from '../types/prodx';
+import { ExportSignedPdfModal } from './ExportSignedPdfModal';
 
 interface ShiftLifecycleModalProps {
   isOpen: boolean;
@@ -24,6 +27,9 @@ interface ShiftLifecycleModalProps {
   telemetrySummary: TelemetrySummary;
   onShiftUpdated: () => Promise<void>;
   initialStep?: 'FINALIZE' | 'PROMPT_NEW' | 'HISTORY';
+  orders?: PosOrderRecord[];
+  auditLogs?: AuditLogRecord[];
+  throttles?: LoginThrottleRecord[];
 }
 
 export const ShiftLifecycleModal: React.FC<ShiftLifecycleModalProps> = ({
@@ -32,6 +38,9 @@ export const ShiftLifecycleModal: React.FC<ShiftLifecycleModalProps> = ({
   telemetrySummary,
   onShiftUpdated,
   initialStep = 'FINALIZE',
+  orders = [],
+  auditLogs = [],
+  throttles = [],
 }) => {
   const [step, setStep] = useState<'FINALIZE' | 'PROMPT_NEW' | 'HISTORY'>(
     telemetrySummary.shiftStatus === 'FINALIZED_PENDING_NEW' ? 'PROMPT_NEW' : initialStep
@@ -47,6 +56,7 @@ export const ShiftLifecycleModal: React.FC<ShiftLifecycleModalProps> = ({
     finalizedShift: ShiftRecord;
     auditLog: any;
   } | null>(null);
+  const [isExportPdfOpen, setIsExportPdfOpen] = useState(false);
 
   // New Shift Form
   const defaultNextShift = telemetrySummary.activeShift.includes('AM')
@@ -443,12 +453,24 @@ export const ShiftLifecycleModal: React.FC<ShiftLifecycleModalProps> = ({
                   <p className="text-xs text-emerald-700 leading-relaxed">
                     Shift audit log entry was successfully sealed with SHA-256 hash chaining. Please specify the new active shift identifier to resume POS sales tracking in telemetry.
                   </p>
-                  {finalizedResult && (
-                    <div className="pt-2 border-t border-emerald-200/60 flex items-center gap-3 text-[11px] font-mono text-emerald-900">
-                      <span>Ledger Seq #{finalizedResult.auditLog.sequenceNo}</span>
-                      <span>Hash: {finalizedResult.auditLog.entryHash}</span>
+                  <div className="pt-2 border-t border-emerald-200/60 flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-3 text-[11px] font-mono text-emerald-900">
+                      {finalizedResult && (
+                        <>
+                          <span>Ledger Seq #{finalizedResult.auditLog.sequenceNo}</span>
+                          <span>Hash: {String(finalizedResult.auditLog.entryHash).slice(0, 16)}...</span>
+                        </>
+                      )}
                     </div>
-                  )}
+                    <button
+                      type="button"
+                      onClick={() => setIsExportPdfOpen(true)}
+                      className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>ดาวน์โหลดรายงาน PDF พร้อมลายเซ็น</span>
+                    </button>
+                  </div>
                 </div>
 
                 {startError && (
@@ -642,6 +664,16 @@ export const ShiftLifecycleModal: React.FC<ShiftLifecycleModalProps> = ({
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Export Signed Daily Audit & Security Report Modal */}
+      <ExportSignedPdfModal
+        isOpen={isExportPdfOpen}
+        onClose={() => setIsExportPdfOpen(false)}
+        orders={orders}
+        auditLogs={auditLogs}
+        throttles={throttles}
+        defaultSupervisorName={finalizedBy}
+      />
     </div>
   );
 };
